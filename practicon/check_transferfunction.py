@@ -152,12 +152,12 @@ class CheckTransferFunction:
                 score -= 1.2 * nzwrong / (nztest + nptest)
                 s = (nzwrong > 1 and "s") or ""
                 result.append('{nzwrong} zero{s} or zero-pair{s}'
-                              ' incorrect or missing'.format(locals()))
+                              ' incorrect or missing'.format(**locals()))
             if nptest and npwrong:
                 score -= 1.5 * npwrong / (nptest + nztest)
                 s = (npwrong > 1 and "s") or ""
                 result.append('{npwrong} pole{s} or pole-pair{s}'
-                              ' incorrect or missing'.format(locals()))
+                              ' incorrect or missing'.format(**locals()))
 
             return (
                 "Check transfer function '{}'".format(self.var),
@@ -169,7 +169,7 @@ class CheckTransferFunction:
 
         except Exception as e:
             raise RuntimeError("Cannot check {var}: {e}".format(
-                dict(var=self.var, e=str(e))))
+                var=self.var, e=str(e)))
 
     def encode(self, maxvariant: int, fn):
         """

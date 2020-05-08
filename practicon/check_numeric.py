@@ -86,7 +86,7 @@ class CheckNumeric:
             value = _globals[self.var]
         except KeyError:
             raise RuntimeWarning(
-                "Variable {} not found".format(self.var))
+                "Variable {var} not found".format(var=self.var))
 
         try:
             good = abs(ref - value) < tol
@@ -96,10 +96,10 @@ class CheckNumeric:
                     dict(var=self.var, exc=str(exc))))
 
         return (
-            "Check result '{}'".format(self.var),
+            "Check result '{var}'".format(var=self.var),
             1.0*good,
             (good and "Answer is correct") or "Answer is incorrect",
-            "Reference {ref} (± {tol})".format(locals()))
+            "Reference {ref} (± {tol})".format(**locals()))
 
     def encode(self, nvariants: int, func):
         """
