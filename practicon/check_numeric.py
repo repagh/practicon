@@ -129,4 +129,4 @@ class CheckNumeric:
             ref.append(value)
 
         enc = json.JSONEncoder(ensure_ascii=True)
-        return b64encode(enc.encode(ref).encode('ascii'))
+        return b64encode(enc.encode(ref).encode('ascii')).decode('ascii')

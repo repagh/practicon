@@ -197,4 +197,4 @@ class CheckTransferFunction:
             ref.append(dict(num=num.tolist(), den=den.tolist(), dt=dt))
 
         enc = json.JSONEncoder(ensure_ascii=True)
-        return b64encode(enc.encode(ref).encode('ascii'))
+        return b64encode(enc.encode(ref).encode('ascii')).decode('ascii')
