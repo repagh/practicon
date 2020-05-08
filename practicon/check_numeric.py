@@ -53,7 +53,7 @@ class CheckNumeric:
         self.d_abs = d_abs
         self.d_rel = d_rel
 
-    def __call__(self, variant: int, codeddata: str, _globals=None):
+    def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
         Check whether a given answer is within a numeric range.
 
@@ -79,20 +79,17 @@ class CheckNumeric:
             Reference answer
         """
         dec = json.JSONDecoder()
-        ref = dec.decode(b64decode(codeddata).decode('ascii'))
-        tol = max(self.d_abs, abs(self.d_rel*ref[variant]))
+        ref = dec.decode(b64decode(codeddata).decode('ascii'))[variant]
+        tol = max(self.d_abs, abs(self.d_rel*ref))
         tol = round(tol, 2-int(log10(tol)))
         try:
-            if _globals is None:
-                value = globals()[self.var]
-            else:
-                value = _globals[self.var]
+            value = _globals[self.var]
         except KeyError:
             raise RuntimeWarning(
                 "Variable {} not found".format(self.var))
 
         try:
-            good = abs(ref[variant] - value) < tol
+            good = abs(ref - value) < tol
         except Exception as exc:
             raise RuntimeError(
                 "Cannot check {var}: {exc}".format(
@@ -102,8 +99,7 @@ class CheckNumeric:
             "Check result '{}'".format(self.var),
             1.0*good,
             (good and "Answer is correct") or "Answer is incorrect",
-            "Reference {ref} (± {tol})".format(
-                dict(ref=ref[variant], tol=tol)))
+            "Reference {ref} (± {tol})".format(locals()))
 
     def encode(self, nvariants: int, func):
         """
