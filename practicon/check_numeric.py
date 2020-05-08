@@ -89,16 +89,17 @@ class CheckNumeric:
                 value = _globals[self.var]
         except KeyError:
             raise RuntimeWarning(
-                "Variable {var} not found".format(self.__dict__))
+                "Variable {} not found".format(self.var))
 
         try:
             good = abs(ref[variant] - value) < tol
         except Exception as exc:
             raise RuntimeError(
-                "Cannot check {self.var}: {exc}".format(locals()))
+                "Cannot check {var}: {exc}".format(
+                    dict(var=self.var, exc=str(exc))))
 
         return (
-            "Check result '{var}'".format(self.__dict__),
+            "Check result '{}'".format(self.var),
             1.0*good,
             (good and "Answer is correct") or "Answer is incorrect",
             "Reference {ref[variant]} (± {tol})".format(locals()))

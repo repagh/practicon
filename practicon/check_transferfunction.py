@@ -92,7 +92,7 @@ class CheckTransferFunction:
             tf = _globals[self.var]
         except KeyError:
             raise RuntimeWarning(
-                "Transfer function {var} not found".format(self.__dict__))
+                "Transfer function {} not found".format(self.var))
 
         result = []
         score = 1.0
@@ -160,7 +160,7 @@ class CheckTransferFunction:
                               ' incorrect or missing'.format(locals()))
 
             return (
-                "Check transfer function '{var}'".format(self.__dict__),
+                "Check transfer function '{}'".format(self.var),
                 max(round(score, 3), 0.0),
                 (result and ', '.join(result)) or
                 'answered correctly',
@@ -168,7 +168,8 @@ class CheckTransferFunction:
                     ref['num'], ref['den'], ref['dt'])._repr_latex_())
 
         except Exception as e:
-            raise RuntimeError("Cannot check {self.var}: {e}".format(locals()))
+            raise RuntimeError("Cannot check {var}: {e}".format(
+                dict(var=self.var, e=str(e))))
 
     def encode(self, maxvariant: int, fn):
         """
