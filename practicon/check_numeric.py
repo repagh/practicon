@@ -102,7 +102,7 @@ class CheckNumeric:
             "Check result '{}'".format(self.var),
             1.0*good,
             (good and "Answer is correct") or "Answer is incorrect",
-            "Reference {ref[variant]} (± {tol})".format(
+            "Reference {ref} (± {tol})".format(
                 dict(ref=ref[variant], tol=tol)))
 
     def encode(self, nvariants: int, func):
