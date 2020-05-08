@@ -42,16 +42,16 @@ def test_numeric():
         assert testname == "Check result 'a'"
         assert score == 0.0
         assert result == "Answer is incorrect"
-        assert modelanswer == f"Reference {10+v} (± 0.1)"
+        assert modelanswer == "Reference {10+v} (± 0.1)".format(locals())
     
     # correct answer
     testname, score, result, modelanswer = check1(0, ref, locals())
     assert testname == "Check result 'a'"
     assert score == 1.0
     assert result == "Answer is correct"
-    assert modelanswer == f"Reference {10} (± 0.1)"
+    assert modelanswer == "Reference {10} (± 0.1)"
     
     # ratio test
     testname, score, result, modelanswer = check3(0, ref, locals())
     assert score == 1.0
-    assert modelanswer == f"Reference {10} (± 1.5)"
+    assert modelanswer == "Reference {10} (± 1.5)"
