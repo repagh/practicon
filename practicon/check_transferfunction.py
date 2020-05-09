@@ -164,12 +164,17 @@ class CheckTransferFunction:
                 max(round(score, 3), 0.0),
                 (result and ', '.join(result)) or
                 'answered correctly',
-                TransferFunction(
-                    ref['num'], ref['den'], ref['dt'])._repr_latex_())
+                '\(' + TransferFunction(
+                    ref['num'], ref['den'], ref['dt'])._repr_latex_()[2:-2] 
+                + '\)')
 
         except Exception as e:
-            raise RuntimeError("Cannot check {var}: {e}".format(
-                var=self.var, e=str(e)))
+            return (
+                "Check transfer function '{}'".format(self.var),
+                0.0,
+                "cannot analyse as transfer function",
+                TransferFunction(
+                    ref['num'], ref['den'], ref['dt'])._repr_latex_())
 
     def encode(self, maxvariant: int, fn):
         """

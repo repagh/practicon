@@ -91,15 +91,16 @@ class CheckNumeric:
         try:
             good = abs(ref - value) < tol
         except Exception as exc:
-            raise RuntimeError(
-                "Cannot check {var}: {exc}".format(
-                    dict(var=self.var, exc=str(exc))))
+            return ("Check result '{var}'".format(var=self.var),
+            0.0,
+            "cannot check variable as float",
+            "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
 
         return (
             "Check result '{var}'".format(var=self.var),
             1.0*good,
             (good and "Answer is correct") or "Answer is incorrect",
-            "Reference {ref} (± {tol})".format(**locals()))
+            "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
 
     def encode(self, nvariants: int, func):
         """
