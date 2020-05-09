@@ -37,8 +37,7 @@ def test_transferfunction():
 
     # fail for incorrect/unreadable
     a = (2, 3)
-    with pytest.raises(RuntimeError):
-        check1(0, ref, locals())
+    assert check1(0, ref, locals())[1] == 0.0
 
     # set back to normal
     a = TransferFunction([1, 1], [1, 1, 0])
@@ -62,7 +61,7 @@ def test_transferfunction():
     # ratio test
     testname, score, result, modelanswer = check3(0, ref, locals())
     assert score == 1.0
-    assert modelanswer == "$$\\frac{s + 1}{s^2 + s}$$"
+    assert modelanswer == "\n s + 1\n-------\ns^2 + s\n"
 
     # incorrect number of zeros/poles
     a = TransferFunction([1], [1, 1, 1, 0])

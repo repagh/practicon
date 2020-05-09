@@ -164,9 +164,8 @@ class CheckTransferFunction:
                 max(round(score, 3), 0.0),
                 (result and ', '.join(result)) or
                 'answered correctly',
-                '\(' + TransferFunction(
-                    ref['num'], ref['den'], ref['dt'])._repr_latex_()[2:-2] 
-                + '\)')
+                str(TransferFunction(
+                    ref['num'], ref['den'], ref['dt'])))
 
         except Exception as e:
             return (

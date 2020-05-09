@@ -31,8 +31,7 @@ def test_numeric():
 
     # fail for incorrect/unreadable
     a = (2, 3)
-    with pytest.raises(RuntimeError):
-        check1(0, ref, locals())
+    assert check1(0, ref, locals())[1] == 0.0
 
     # set back to normal
     a = 10
