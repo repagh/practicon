@@ -11,8 +11,11 @@
 #
 from .check_numeric import CheckNumeric
 from .check_transferfunction import CheckTransferFunction
+from .check_matrix import CheckMatrix
+from .check_statespace import CheckStateSpace
+import tests
+
 try:
     from ._version import __version__, __commit__
 except ImportError:
     __version__ = "dev"
-
