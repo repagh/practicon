@@ -7,7 +7,10 @@ Test the CheckNumeric class.
 
 @author: repa
 """
-from practicon import CheckTransferFunction
+try:
+    from .check_transferfunction import CheckTransferFunction
+except ImportError:
+    from practicon import CheckTransferFunction
 from control import TransferFunction
 import pytest
 

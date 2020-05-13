@@ -11,15 +11,15 @@ Test the CheckMatrix class.
 # to run as script, set the execution folder to practicon
 
 try:
-    from check_matrix import CheckMatrix
+    from .check_matrix import CheckMatrix
 except ImportError:
-    from practicon import CheckMatrix 
+    from practicon import CheckMatrix
 import pytest
 import numpy as np
 
 
 def test_matrix():
-    
+
     # no variable found, runtimewarning
     check1 = CheckMatrix('a', 0.1, 0.00)
     check2 = CheckMatrix('b', 0.1, 0.00)
@@ -30,7 +30,7 @@ def test_matrix():
     def myfunc(variant: int):
         return {'a': np.eye(2) + np.matrix(((0, 1), (0, 0))) * variant,
                 'b1': np.ones((3,)) + variant,
-                'b2': np.ones((3,1)) + variant}
+                'b2': np.ones((3, 1)) + variant}
 
     # generate encoding
     ref = check1.encode(5, myfunc)
@@ -70,7 +70,7 @@ def test_matrix():
     # assert modelanswer == "Reference 10 (± 1.5)"
 
     # accept one failing for partial score
-    a[0,1] = 10
+    a[0, 1] = 10
     testname, score, result, modelanswer = check4(0, ref, locals())
     assert score == 0.5
     # assert modelanswer == "Reference 10 (± 1.5)"
@@ -80,13 +80,13 @@ def test_matrix():
     refb1 = checkb1.encode(5, myfunc)
     refb2 = checkb2.encode(5, myfunc)
     ab1 = np.ones((3,)) + 1
-    ab2 = np.ones((3,1)) + 2
+    ab2 = np.ones((3, 1)) + 2
     ab3 = np.ones((4,))
     testname, score, result, modelanswer = checkb1(1, refb1, dict(b1=ab1))
     assert score == 1
     testname, score, result, modelanswer = checkb1(2, refb2, dict(b1=ab2))
     assert score == 1
-    testname, score, result, modelanswer = checkb2(2, refb1, dict(b2=ab2)) 
+    testname, score, result, modelanswer = checkb2(2, refb1, dict(b2=ab2))
     assert score == 1
     testname, score, result, modelanswer = checkb2(1, refb2, dict(b2=ab1))
     assert score == 1
@@ -96,6 +96,7 @@ def test_matrix():
     testname, score, result, modelanswer = check4(0, ref, dict(a=ab3))
     assert score == 0
     assert result == "incorrect matrix shape"
+
 
 if __name__ == '__main__':
     test_matrix()

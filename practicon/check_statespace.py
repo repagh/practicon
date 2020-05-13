@@ -10,69 +10,96 @@ import json
 from math import log10
 import numpy as np
 from scipy import signal
-from control import StateSpace, minreal, ss2tf, tf2ss
+from control import StateSpace, minreal
 from scipy.linalg import schur
 
-class ZPK:
-    '''Zero-Pole-Gain representation for checking'''
 
-    def __init__(self, z, p, k, num):
-        '''Create a ZPK object
-            
-        
-        
-        '''
+class ZPK:
+    """Zero-Pole-Gain representation for checking."""
+
+    def __init__(self, z, p, k):
+        """Create a ZPK object.
+
+        Parameters
+        ----------
+        z : array of float
+            Zeros.
+        p : array of float
+            Poles.
+        k : float
+            Gain.
+        """
         self.z = z
         self.p = p
         self.k = k
-        self.num = num
 
     def check(self, other, im, ip, within_tolerance):
-        
+        """Check against another ZPK instance.
+
+        Parameters
+        ----------
+        other : ZPK
+            ZPK to test.
+        im : int
+            Input/column being tested.
+        ip : int
+            Output/row being tested.
+        within_tolerance : function
+            Function checking tolerance.
+
+        Returns
+        -------
+        result : bool
+            True if within tolerance.
+        report : str
+            Report on any errors.
+
+        """
         report = []
         if self.p.shape != other.p.shape or \
-            not within_tolerance(self.p, other.p):
+                not within_tolerance(self.p, other.p):
             report.append("Dynamics/eigenvalues differ for "
-                          "input {im} to output {ip}".format(im=im+1, ip=ip+1))
-            
-        if ((self.z.shape != other.z.shape) or 
-            (self.z.size != 0 and (not within_tolerance(self.z, other.z))) or 
-            (not within_tolerance(self.k, other.k))):
+                          "input {im} to output {ip}"
+                          "".format(im=im+1, ip=ip+1))
+
+        if ((self.z.shape != other.z.shape) or
+            (self.z.size != 0 and (not within_tolerance(self.z, other.z))) or
+                (not within_tolerance(self.k, other.k))):
             report.append("Numerator/gain does not match, {im} -> {ip}"
                           "".format(im=im+1, ip=ip+1))
-        return not report, report 
+        return not report, report
 
 
 def ss_to_zpk(A, B, C):
-    '''Convert a state-space system to sets of Zero-Pole-Gain objects
-        
+    """Convert a state-space system to sets of Zero-Pole-Gain objects.
+
     Parameters
-    ---------
+    ----------
     A: (n,n) array_like
         State-space dynamics matrix
     B: (n,m) array_like
         Input matrix.
     C: (n,m) array_like
         Output matrix
-    '''   
+    """
     zpks = []
     for im in range(B.shape[1]):
         zpks.append([])
         for ip in range(C.shape[0]):
             try:
                 num, den = signal.ss2tf(
-                    A, B[:, im].reshape((-1,1)), 
-                    C[ip,:].reshape((1,-1)), np.zeros((1, 1)))
+                    A, B[:, im].reshape((-1, 1)),
+                    C[ip, :].reshape((1, -1)), np.zeros((1, 1)))
                 nu2 = num
-                
+
                 # strip leading (close to zeros) from num
-                while np.allclose(nu2[:,0], 0, 1e-14) and \
-                    nu2.shape[-1] > 1:
-                    nu2 = nu2[:,1:]
-                    
+                while np.allclose(nu2[:, 0], 0, 1e-14) and \
+                        nu2.shape[-1] > 1:
+                    nu2 = nu2[:, 1:]
+
                 # to zpk
                 z, p, k = signal.tf2zpk(nu2, den)
-                zpks[-1].append(ZPK(z, p, k, num))
+                zpks[-1].append(ZPK(z, p, k))
             except ValueError:
                 raise RuntimeWarning("cannot analyse state-space")
     return zpks
@@ -158,10 +185,10 @@ class CheckStateSpace:
         # checking function
         def within_tolerance(xr, x):
             return np.allclose(xr, x, self.d_rel, self.d_abs)
-        
+
         ref = ss_to_zpk(Aref, Bref, Cref)
-        
-        fails = 0        
+
+        fails = 0
         try:
             value = _globals[self.var]
         except KeyError:
@@ -190,7 +217,7 @@ class CheckStateSpace:
             if C.shape[0] != Cref.shape[0]:
                 fails += self.threshold
                 report.append('incorrect number of outputs')
-            
+
             if fails >= self.threshold:
                 return ("Check result '{var}'".format(var=self.var),
                         0.0,
@@ -207,20 +234,20 @@ class CheckStateSpace:
 
             # orders/sizes correct, can now check transfers
             zpk_ref = ss_to_zpk(Aref, Bref, Cref)
-            zpk_val = ss_to_zpk(A, B, C)            
+            zpk_val = ss_to_zpk(A, B, C)
             for im in range(len(zpk_ref)):
                 for ip in range(len(zpk_ref[0])):
-                    ok, r = zpk_ref[im][ip].check(zpk_val[im][ip], im, ip, 
-                                                       within_tolerance)
+                    ok, r = zpk_ref[im][ip].check(zpk_val[im][ip], im, ip,
+                                                  within_tolerance)
                     if not ok:
                         fails += 1
                         report.extend(r)
-                        
+
         except Exception:
             return ("Check result '{var}'".format(var=self.var),
-            0.0,
-            "not a valid state-space system",
-            "Reference {ref}".format(ref=ref))
+                    0.0,
+                    "not a valid state-space system",
+                    "Reference {ref}".format(ref=ref))
 
         score = max((self.threshold + 1 - fails) / (self.threshold + 1), 0.0)
         return (
@@ -250,23 +277,23 @@ class CheckStateSpace:
         for _v in range(nvariants):
             res = func(_v)
             value = res[self.var]
-            
+
             # balance the ABCD system, for robustness, to real shur form
             As, Z = schur(value.A)
             Bs = Z.T @ value.B
             Cs = value.C @ Z
             Ds = value.D
             n = As.shape[0]
-            
+
             # round off to 2+size digits
             def tolround(x):
                 tol = max(self.d_abs, abs(self.d_rel*x))
                 return round(x, 2+n-int(log10(tol)))
-            
+
             tolround = np.vectorize(tolround)
-            ref.append((tolround(As).tolist(), 
-                        tolround(Bs).tolist(), 
-                        tolround(Cs).tolist(), 
+            ref.append((tolround(As).tolist(),
+                        tolround(Bs).tolist(),
+                        tolround(Cs).tolist(),
                         tolround(Ds).tolist()))
 
         enc = json.JSONEncoder(ensure_ascii=True)
