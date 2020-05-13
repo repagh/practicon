@@ -93,7 +93,8 @@ def test_statespace():
     assert score == 0.75
     assert result == '1 incorrect elements in D matrix'
 
-    # improperly reduced
+    # improperly reduced; does not work because StateSpace is so
+    # efficient!
     sys5 = myfunc(0)['sys5']
     # print(sys5)
     testname, score, result, modelanswer = check1(
