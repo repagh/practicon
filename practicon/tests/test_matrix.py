@@ -11,9 +11,12 @@ Test the CheckMatrix class.
 # to run as script, set the execution folder to practicon
 
 try:
-    from .check_matrix import CheckMatrix
-except ImportError:
     from practicon import CheckMatrix
+except ImportError:
+    import sys
+    import os
+    sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
+    from check_matrix import CheckMatrix
 import pytest
 import numpy as np
 

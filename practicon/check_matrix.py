@@ -7,8 +7,10 @@ Created on Tue May 12 10:01:06 2020 .
 """
 
 import json
+from base64 import b64encode, b64decode
 from math import log10
 import numpy as np
+import lzma
 
 
 class CheckMatrix:
@@ -85,7 +87,10 @@ class CheckMatrix:
             Reference answer
         """
         dec = json.JSONDecoder()
-        ref = np.array(dec.decode(codeddata))[variant]
+        ref = np.array(dec.decode(
+            lzma.decompress(b64decode(codeddata.encode('ascii')))
+            .decode('utf-8'))[variant])
+
         tol = np.maximum(self.d_abs, np.abs(self.d_rel*ref))
 
         # round of the tolerance matrix to each element 2 digits of precision
@@ -181,4 +186,5 @@ class CheckMatrix:
             ref.append(value.tolist())
 
         enc = json.JSONEncoder(ensure_ascii=True)
-        return enc.encode(ref)
+        return b64encode(
+            lzma.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')

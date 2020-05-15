@@ -10,6 +10,7 @@ from control import TransferFunction
 from base64 import b64encode, b64decode
 import json
 import numpy as np
+import lzma
 
 
 class CheckTransferFunction:
@@ -84,7 +85,9 @@ class CheckTransferFunction:
             Reference answer
         """
         dec = json.JSONDecoder()
-        ref = dec.decode(b64decode(codeddata).decode('ascii'))[variant]
+        ref = dec.decode(
+            lzma.decompress(b64decode(codeddata.encode('ascii')))
+            .decode('utf-8'))[variant]
 
         # get the tf. If this throws, show mercy and let student provide
         # the variable
@@ -97,7 +100,7 @@ class CheckTransferFunction:
         result = []
         score = 1.0
         try:
-            tf = TransferFunction(tf.num, tf.den, td.dt)
+            tf = TransferFunction(tf.num, tf.den, tf.dt)
             assert len(tf.den) == 1 and len(tf.den[0]) == 1
             assert len(tf.num) == 1 and len(tf.num[0]) == 1
             num, den = tf.num[0][0], tf.den[0][0]
@@ -167,7 +170,7 @@ class CheckTransferFunction:
                 str(TransferFunction(
                     ref['num'], ref['den'], ref['dt'])))
 
-        except Exception as e:
+        except Exception:
             return (
                 "Check transfer function '{}'".format(self.var),
                 0.0,
@@ -202,4 +205,5 @@ class CheckTransferFunction:
             ref.append(dict(num=num.tolist(), den=den.tolist(), dt=dt))
 
         enc = json.JSONEncoder(ensure_ascii=True)
-        return b64encode(enc.encode(ref).encode('ascii')).decode('ascii')
+        return b64encode(
+            lzma.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')

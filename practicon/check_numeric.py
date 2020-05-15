@@ -9,6 +9,7 @@ Created on Thu May  7 22:18:06 2020 .
 from base64 import b64encode, b64decode
 import json
 from math import log10
+import lzma
 
 
 class CheckNumeric:
@@ -79,7 +80,10 @@ class CheckNumeric:
             Reference answer
         """
         dec = json.JSONDecoder()
-        ref = dec.decode(b64decode(codeddata).decode('ascii'))[variant]
+        ref = dec.decode(
+            lzma.decompress(b64decode(
+                codeddata.encode('ascii'))).decode('utf-8'))[variant]
+
         tol = max(self.d_abs, abs(self.d_rel*ref))
         tol = round(tol, 2-int(log10(tol)))
         try:
@@ -90,11 +94,11 @@ class CheckNumeric:
 
         try:
             good = abs(ref - value) < tol
-        except Exception as exc:
+        except Exception:
             return ("Check result '{var}'".format(var=self.var),
-            0.0,
-            "cannot check variable as float",
-            "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
+                    0.0,
+                    "cannot check variable as float",
+                    "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
 
         return (
             "Check result '{var}'".format(var=self.var),
@@ -128,4 +132,5 @@ class CheckNumeric:
             ref.append(value)
 
         enc = json.JSONEncoder(ensure_ascii=True)
-        return b64encode(enc.encode(ref).encode('ascii')).decode('ascii')
+        return b64encode(
+            lzma.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')

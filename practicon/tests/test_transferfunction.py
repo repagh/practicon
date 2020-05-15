@@ -7,10 +7,14 @@ Test the CheckNumeric class.
 
 @author: repa
 """
+
 try:
-    from .check_transferfunction import CheckTransferFunction
-except ImportError:
     from practicon import CheckTransferFunction
+except ImportError:
+    import sys
+    import os
+    sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
+    from check_transferfunction import CheckTransferFunction
 from control import TransferFunction
 import pytest
 
@@ -61,6 +65,14 @@ def test_transferfunction():
     assert result == "answered correctly"
     # assert modelanswer == f"Reference {10} (± 0.1)"
 
+    # with numerical stuff in numerator
+    a = TransferFunction([1.0e-17, 1, 1], [1, 1, 0])
+    # correct answer
+    testname, score, result, modelanswer = check1(0, ref, locals())
+    assert testname == "Check transfer function 'a'"
+    assert score == 1.0
+    assert result == "answered correctly"
+
     # ratio test
     testname, score, result, modelanswer = check3(0, ref, locals())
     assert score == 1.0
@@ -74,3 +86,7 @@ def test_transferfunction():
     assert score < 1.0
     assert result != "answered correctly"
     # assert modelanswer == f"Reference {10} (± 0.1)"
+
+
+if __name__ == '__main__':
+    test_transferfunction()

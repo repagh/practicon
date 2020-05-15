@@ -9,12 +9,7 @@
 # Copyright (c) 2020 Delft University of Technology
 # All rights reserved.
 #
-from .check_numeric import CheckNumeric
-from .check_transferfunction import CheckTransferFunction
-from .check_matrix import CheckMatrix
-from .check_statespace import CheckStateSpace
-
-try:
-    from ._version import __version__, __commit__
-except ImportError:
-    __version__ = "dev"
+#from .check_numeric import CheckNumeric
+#from .check_transferfunction import CheckTransferFunction
+#from .check_matrix import CheckMatrix
+#from .check_statespace import CheckStateSpace

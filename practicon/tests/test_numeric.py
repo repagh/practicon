@@ -8,7 +8,14 @@ Test the CheckNumeric class.
 @author: repa
 """
 
-from practicon import CheckNumeric
+try:
+    from practicon import CheckNumeric
+except ImportError:
+    import sys
+    import os
+    sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
+    from check_numeric import CheckNumeric
+
 import pytest
 
 
@@ -55,3 +62,7 @@ def test_numeric():
     testname, score, result, modelanswer = check3(0, ref, locals())
     assert score == 1.0
     assert modelanswer == "Reference 10 (± 1.5)"
+
+
+if __name__ == '__main__':
+    test_numeric()

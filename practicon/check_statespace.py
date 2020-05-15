@@ -12,6 +12,8 @@ import numpy as np
 from scipy import signal
 from control import StateSpace, minreal
 from scipy.linalg import schur
+from base64 import b64encode, b64decode
+import lzma
 
 
 class ZPK:
@@ -179,7 +181,10 @@ class CheckStateSpace:
             Reference answer
         """
         dec = json.JSONDecoder()
-        Aref, Bref, Cref, Dref = map(np.array, dec.decode(codeddata)[variant])
+        Aref, Bref, Cref, Dref = map(
+            np.array,
+            dec.decode(lzma.decompress(b64decode(codeddata.encode('ascii')))
+                       .decode('utf-8'))[variant])
         sys_ref = StateSpace(Aref, Bref, Cref, Dref)
 
         # checking function
@@ -299,4 +304,5 @@ class CheckStateSpace:
                         tolround(Ds).tolist()))
 
         enc = json.JSONEncoder(ensure_ascii=True)
-        return enc.encode(ref)
+        return b64encode(
+            lzma.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')

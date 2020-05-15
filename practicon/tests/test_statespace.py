@@ -6,12 +6,15 @@ Created on Tue May 12 15:18:33 2020
 @author: repa
 """
 
-# to run as script, set the execution folder to practicon
-
 try:
-    from check_statespace import CheckStateSpace
-except ImportError:
     from practicon import CheckStateSpace
+except ImportError:
+    import sys
+    import os
+    sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
+    from check_statespace import CheckStateSpace
+
+from control import TransferFunction
 import pytest
 import numpy as np
 from control import StateSpace, ss2tf, tf2ss
