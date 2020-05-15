@@ -196,10 +196,12 @@ class CheckStateSpace:
                 "Variable {var} not found".format(var=self.var))
         report = []
         try:
-            A = value.A
-            B = value.B
-            C = value.C
-            D = value.D
+            A = np.array(value.A)
+            B = np.array(value.B)
+            C = np.array(value.C)
+            D = np.array(value.D)
+            dt = value.dt
+            value = StateSpace(A, B, C, D, dt)
             if A.shape != Aref.shape:
                 value = minreal(value)
                 A = value.A

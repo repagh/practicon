@@ -97,7 +97,7 @@ class CheckTransferFunction:
         result = []
         score = 1.0
         try:
-            assert isinstance(tf, TransferFunction)
+            tf = TransferFunction(tf.num, tf.den, td.dt)
             assert len(tf.den) == 1 and len(tf.den[0]) == 1
             assert len(tf.num) == 1 and len(tf.num[0]) == 1
             num, den = tf.num[0][0], tf.den[0][0]
@@ -175,7 +175,7 @@ class CheckTransferFunction:
                 TransferFunction(
                     ref['num'], ref['den'], ref['dt'])._repr_latex_())
 
-    def encode(self, maxvariant: int, fn):
+    def encode(self, nvariants: int, fn):
         """
         Generate reference data for answer & variants.
 
@@ -194,7 +194,7 @@ class CheckTransferFunction:
         """
         # generate for all variants
         ref = []
-        for v in range(maxvariant+1):
+        for v in range(nvariants):
             res = fn(v)
             tf = res[self.var]
             num, den, dt = tf.num[0][0], tf.den[0][0], tf.dt
