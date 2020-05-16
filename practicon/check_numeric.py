@@ -9,7 +9,7 @@ Created on Thu May  7 22:18:06 2020 .
 from base64 import b64encode, b64decode
 import json
 from math import log10
-import lzma
+import bz2 as cmpr
 
 
 class CheckNumeric:
@@ -81,7 +81,7 @@ class CheckNumeric:
         """
         dec = json.JSONDecoder()
         ref = dec.decode(
-            lzma.decompress(b64decode(
+            cmpr.decompress(b64decode(
                 codeddata.encode('ascii'))).decode('utf-8'))[variant]
 
         tol = max(self.d_abs, abs(self.d_rel*ref))
@@ -133,4 +133,4 @@ class CheckNumeric:
 
         enc = json.JSONEncoder(ensure_ascii=True)
         return b64encode(
-            lzma.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')
+            cmpr.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')

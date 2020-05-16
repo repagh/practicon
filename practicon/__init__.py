@@ -9,7 +9,7 @@
 # Copyright (c) 2020 Delft University of Technology
 # All rights reserved.
 #
-#from .check_numeric import CheckNumeric
-#from .check_transferfunction import CheckTransferFunction
-#from .check_matrix import CheckMatrix
-#from .check_statespace import CheckStateSpace
+from .check_numeric import CheckNumeric
+from .check_transferfunction import CheckTransferFunction
+from .check_matrix import CheckMatrix
+from .check_statespace import CheckStateSpace

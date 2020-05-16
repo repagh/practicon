@@ -10,7 +10,7 @@ from control import TransferFunction
 from base64 import b64encode, b64decode
 import json
 import numpy as np
-import lzma
+import bz2 as cmpr
 
 
 class CheckTransferFunction:
@@ -86,7 +86,7 @@ class CheckTransferFunction:
         """
         dec = json.JSONDecoder()
         ref = dec.decode(
-            lzma.decompress(b64decode(codeddata.encode('ascii')))
+            cmpr.decompress(b64decode(codeddata.encode('ascii')))
             .decode('utf-8'))[variant]
 
         # get the tf. If this throws, show mercy and let student provide
@@ -206,4 +206,4 @@ class CheckTransferFunction:
 
         enc = json.JSONEncoder(ensure_ascii=True)
         return b64encode(
-            lzma.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')
+            cmpr.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')

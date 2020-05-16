@@ -13,7 +13,7 @@ from scipy import signal
 from control import StateSpace, minreal
 from scipy.linalg import schur
 from base64 import b64encode, b64decode
-import lzma
+import bz2 as cmpr 
 
 
 class ZPK:
@@ -183,7 +183,7 @@ class CheckStateSpace:
         dec = json.JSONDecoder()
         Aref, Bref, Cref, Dref = map(
             np.array,
-            dec.decode(lzma.decompress(b64decode(codeddata.encode('ascii')))
+            dec.decode(cmpr.decompress(b64decode(codeddata.encode('ascii')))
                        .decode('utf-8'))[variant])
         sys_ref = StateSpace(Aref, Bref, Cref, Dref)
 
@@ -305,4 +305,4 @@ class CheckStateSpace:
 
         enc = json.JSONEncoder(ensure_ascii=True)
         return b64encode(
-            lzma.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')
+            cmpr.compress(enc.encode(ref).encode('utf-8'))).decode('ascii')
