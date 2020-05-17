@@ -9,7 +9,7 @@ Created on Thu May  7 22:18:06 2020 .
 from base64 import b64encode, b64decode
 import json
 from math import log10
-import bz2 as cmpr
+import zlib as cmpr
 
 
 class CheckNumeric:

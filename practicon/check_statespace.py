@@ -13,7 +13,7 @@ from scipy import signal
 from control import StateSpace, minreal
 from scipy.linalg import schur
 from base64 import b64encode, b64decode
-import bz2 as cmpr 
+import zlib as cmpr
 
 
 class ZPK:

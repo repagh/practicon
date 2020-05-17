@@ -10,7 +10,7 @@ import json
 from base64 import b64encode, b64decode
 from math import log10
 import numpy as np
-import bz2 as cmpr
+import zlib as cmpr
 
 
 class CheckMatrix:

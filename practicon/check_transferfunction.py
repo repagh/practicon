@@ -10,7 +10,7 @@ from control import TransferFunction
 from base64 import b64encode, b64decode
 import json
 import numpy as np
-import bz2 as cmpr
+import zlib as cmpr
 
 
 class CheckTransferFunction:
