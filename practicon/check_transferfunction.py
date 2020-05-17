@@ -81,6 +81,8 @@ class CheckTransferFunction:
             Normalized score, 0 or 1
         result : str
             Text describing the result
+        studentanswer : str
+            Student's answer, as interpreted
         modelanswer : str
             Reference answer
         """
@@ -167,6 +169,7 @@ class CheckTransferFunction:
                 max(round(score, 3), 0.0),
                 (result and ', '.join(result)) or
                 'answered correctly',
+                str(tf),
                 str(TransferFunction(
                     ref['num'], ref['den'], ref['dt'])))
 
@@ -175,8 +178,9 @@ class CheckTransferFunction:
                 "Check transfer function '{}'".format(self.var),
                 0.0,
                 "cannot analyse as transfer function",
-                TransferFunction(
-                    ref['num'], ref['den'], ref['dt'])._repr_latex_())
+                str(tf),
+                str(TransferFunction(
+                    ref['num'], ref['den'], ref['dt'])))
 
     def encode(self, nvariants: int, fn):
         """

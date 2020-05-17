@@ -177,6 +177,8 @@ class CheckStateSpace:
             Normalized score, 0 or 1
         result : str
             Text describing the result
+        studentanswer : str
+            Student's answer, as interpreted
         modelanswer : str
             Reference answer
         """
@@ -229,6 +231,7 @@ class CheckStateSpace:
                 return ("Check result '{var}'".format(var=self.var),
                         0.0,
                         '<br/>'.join(report),
+                        str(value),
                         "Reference {ref}".format(ref=ref))
 
             # d matrix
@@ -254,6 +257,7 @@ class CheckStateSpace:
             return ("Check result '{var}'".format(var=self.var),
                     0.0,
                     "not a valid state-space system",
+                    str(value),
                     "Reference {ref}".format(ref=ref))
 
         score = max((self.threshold + 1 - fails) / (self.threshold + 1), 0.0)
@@ -261,6 +265,7 @@ class CheckStateSpace:
             "Check result '{var}'".format(var=self.var),
             score,
             (not report and "answer is correct") or "<br/>".join(report),
+            str(value),
             "Reference {ref}".format(ref=sys_ref))
 
     def encode(self, nvariants: int, func):

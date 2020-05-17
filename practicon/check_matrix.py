@@ -83,6 +83,8 @@ class CheckMatrix:
             Normalized score, 0 or 1
         result : str
             Text describing the result
+        studentanswer : str
+            Student answer, as interpreted
         modelanswer : str
             Reference answer
         """
@@ -121,6 +123,7 @@ class CheckMatrix:
                 return ("Check result '{var}'".format(var=self.var),
                         0.0,
                         "incorrect matrix size",
+                        str(value),
                         "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
             elif ref.shape == value.T.shape:
                 fails += 1
@@ -130,6 +133,7 @@ class CheckMatrix:
                 return ("Check result '{var}'".format(var=self.var),
                         0.0,
                         "incorrect matrix shape",
+                        str(value),
                         "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
 
         try:
@@ -142,6 +146,7 @@ class CheckMatrix:
             return ("Check result '{var}'".format(var=self.var),
                     0.0,
                     "cannot check variable as matrix",
+                    str(value),
                     "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
 
         score = max((self.threshold + 1 - fails) / (self.threshold + 1), 0.0)
@@ -150,6 +155,7 @@ class CheckMatrix:
             "Check result '{var}'".format(var=self.var),
             score,
             (good and "Answer is correct") or "Answer is incorrect",
+            str(value),
             "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
 
     def encode(self, nvariants: int, func):

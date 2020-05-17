@@ -76,6 +76,8 @@ class CheckNumeric:
             Normalized score, 0 or 1
         result : str
             Text describing the result
+        studentanswer : str
+            Student's answer, as interpreted
         modelanswer : str
             Reference answer
         """
@@ -98,12 +100,14 @@ class CheckNumeric:
             return ("Check result '{var}'".format(var=self.var),
                     0.0,
                     "cannot check variable as float",
+                    str(value),
                     "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
 
         return (
             "Check result '{var}'".format(var=self.var),
             1.0*good,
             (good and "Answer is correct") or "Answer is incorrect",
+            str(value),
             "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
 
     def encode(self, nvariants: int, func):
