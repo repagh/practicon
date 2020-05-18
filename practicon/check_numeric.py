@@ -97,18 +97,18 @@ class CheckNumeric:
         try:
             good = abs(ref - value) < tol
         except Exception:
-            return ("Check result '{var}'".format(var=self.var),
+            return ("Value '{var}'".format(var=self.var),
                     0.0,
                     "cannot check variable as float",
                     str(value),
-                    "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
+                    "{ref} (± {tol})".format(ref=ref, tol=tol))
 
         return (
-            "Check result '{var}'".format(var=self.var),
+            "Value '{var}'".format(var=self.var),
             1.0*good,
             (good and "Answer is correct") or "Answer is incorrect",
             str(value),
-            "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
+            "{ref} (± {tol})".format(ref=ref, tol=tol))
 
     def encode(self, nvariants: int, func):
         """

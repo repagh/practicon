@@ -120,21 +120,21 @@ class CheckMatrix:
                 ref.size == value.size
                 value.reshape(ref.shape)
             elif ref.size != value.size:
-                return ("Check result '{var}'".format(var=self.var),
+                return ("Matrix '{var}'".format(var=self.var),
                         0.0,
                         "incorrect matrix size",
                         str(value),
-                        "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
+                        "{ref} (± {tol})".format(ref=ref, tol=tol))
             elif ref.shape == value.T.shape:
                 fails += 1
                 result.append("matrix is transposed")
                 value = value.transpose()
             else:
-                return ("Check result '{var}'".format(var=self.var),
+                return ("Matrix '{var}'".format(var=self.var),
                         0.0,
                         "incorrect matrix shape",
                         str(value),
-                        "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
+                        "{ref} (± {tol})".format(ref=ref, tol=tol))
 
         try:
             nfails = np.count_nonzero(np.abs(ref - value) > tol)
@@ -143,20 +143,20 @@ class CheckMatrix:
                               "".format(nfails=nfails))
             fails += nfails
         except Exception:
-            return ("Check result '{var}'".format(var=self.var),
+            return ("Matrix '{var}'".format(var=self.var),
                     0.0,
                     "cannot check variable as matrix",
                     str(value),
-                    "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
+                    "{ref}\n(± {tol})".format(ref=ref, tol=tol))
 
         score = max((self.threshold + 1 - fails) / (self.threshold + 1), 0.0)
         good = fails == 0
         return (
-            "Check result '{var}'".format(var=self.var),
+            "Matrix '{var}'".format(var=self.var),
             score,
             (good and "Answer is correct") or "Answer is incorrect",
             str(value),
-            "Reference {ref} (± {tol})".format(ref=ref, tol=tol))
+            "{ref}\n(± {tol})".format(ref=ref, tol=tol))
 
     def encode(self, nvariants: int, func):
         """

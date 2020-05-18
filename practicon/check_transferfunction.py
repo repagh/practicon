@@ -95,6 +95,7 @@ class CheckTransferFunction:
         # the variable
         try:
             tf = _globals[self.var]
+            tf = TransferFunction(tf['num'], tf['den'], tf['dt'])
         except KeyError:
             raise RuntimeWarning(
                 "Transfer function {} not found".format(self.var))
@@ -102,7 +103,6 @@ class CheckTransferFunction:
         result = []
         score = 1.0
         try:
-            tf = TransferFunction(tf.num, tf.den, tf.dt)
             assert len(tf.den) == 1 and len(tf.den[0]) == 1
             assert len(tf.num) == 1 and len(tf.num[0]) == 1
             num, den = tf.num[0][0], tf.den[0][0]
@@ -165,9 +165,9 @@ class CheckTransferFunction:
                               ' incorrect or missing'.format(**locals()))
 
             return (
-                "Check transfer function '{}'".format(self.var),
+                "Transfer function '{}'".format(self.var),
                 max(round(score, 3), 0.0),
-                (result and ', '.join(result)) or
+                (result and '\n'.join(result)) or
                 'answered correctly',
                 str(tf),
                 str(TransferFunction(
@@ -175,7 +175,7 @@ class CheckTransferFunction:
 
         except Exception:
             return (
-                "Check transfer function '{}'".format(self.var),
+                "Transfer function '{}'".format(self.var),
                 0.0,
                 "cannot analyse as transfer function",
                 str(tf),

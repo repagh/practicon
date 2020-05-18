@@ -198,17 +198,17 @@ class CheckStateSpace:
         fails = 0
         try:
             value = _globals[self.var]
+            A = np.array(value["A"])
+            B = np.array(value["B"])
+            C = np.array(value["C"])
+            D = np.array(value["D"])
+            dt = value["dt"]
+            value = StateSpace(A, B, C, D, dt)
         except KeyError:
             raise RuntimeWarning(
-                "Variable {var} not found".format(var=self.var))
+                "Variable {var} not found or not valid".format(var=self.var))
         report = []
         try:
-            A = np.array(value.A)
-            B = np.array(value.B)
-            C = np.array(value.C)
-            D = np.array(value.D)
-            dt = value.dt
-            value = StateSpace(A, B, C, D, dt)
             if A.shape != Aref.shape:
                 value = minreal(value)
                 A = value.A
@@ -228,11 +228,11 @@ class CheckStateSpace:
                 report.append('incorrect number of outputs')
 
             if fails >= self.threshold:
-                return ("Check result '{var}'".format(var=self.var),
+                return ("State-space system '{var}'".format(var=self.var),
                         0.0,
-                        '<br/>'.join(report),
+                        '\n'.join(report),
                         str(value),
-                        "Reference {ref}".format(ref=ref))
+                        "{ref}".format(ref=ref))
 
             # d matrix
             ndfail = Dref.size - \
@@ -254,19 +254,19 @@ class CheckStateSpace:
                         report.extend(r)
 
         except Exception:
-            return ("Check result '{var}'".format(var=self.var),
+            return ("State-space system '{var}'".format(var=self.var),
                     0.0,
                     "not a valid state-space system",
                     str(value),
-                    "Reference {ref}".format(ref=ref))
+                    str(sys_ref))
 
         score = max((self.threshold + 1 - fails) / (self.threshold + 1), 0.0)
         return (
-            "Check result '{var}'".format(var=self.var),
+            "State-space system '{var}'".format(var=self.var),
             score,
-            (not report and "answer is correct") or "<br/>".join(report),
+            (not report and "answer is correct") or "\n".join(report),
             str(value),
-            "Reference {ref}".format(ref=sys_ref))
+            str(sys_ref))
 
     def encode(self, nvariants: int, func):
         """
