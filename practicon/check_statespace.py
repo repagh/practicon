@@ -60,14 +60,15 @@ class ZPK:
         report = []
         if self.p.shape != other.p.shape or \
                 not within_tolerance(self.p, other.p):
-            report.append("Dynamics/eigenvalues differ for "
-                          "input {im} to output {ip}"
+            report.append("dynamics/eigenvalues differ,"
+                          " input {im} -> output {ip}"
                           "".format(im=im+1, ip=ip+1))
 
         if ((self.z.shape != other.z.shape) or
             (self.z.size != 0 and (not within_tolerance(self.z, other.z))) or
                 (not within_tolerance(self.k, other.k))):
-            report.append("Numerator/gain does not match, {im} -> {ip}"
+            report.append("numerator/gain does not match,"
+                          " input {im} -> output {ip}"
                           "".format(im=im+1, ip=ip+1))
         return not report, report
 
@@ -215,7 +216,7 @@ class CheckStateSpace:
             dt = value["dt"]
             value = StateSpace(A, B, C, D, dt)
         except Exception:
-            return self._return(0.0, "is not a state-space system",
+            return self._return(0.0, "1 is not a state-space system",
                                 _globals[self.var], sys_ref)
 
         report = []
@@ -238,7 +239,7 @@ class CheckStateSpace:
                 fails += self.threshold
                 report.append('incorrect number of outputs')
 
-            if fails >= self.threshold:
+            if fails > self.threshold:
                 return self._return(0.0, "\n".join(report),
                                     value, sys_ref)
 
@@ -268,7 +269,7 @@ class CheckStateSpace:
         score = max(round(
             (self.threshold + 1 - fails) / (self.threshold + 1), 3), 0.0)
         return self._return(
-            score, (not report and "answer is correct") or "\n".join(report),
+            score, ((not report) and "answer is correct") or "\n".join(report),
             value, sys_ref)
 
     def encode(self, nvariants: int, func):

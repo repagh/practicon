@@ -106,7 +106,7 @@ class CheckNumeric:
         return (
             "Value '{var}'".format(var=self.var),
             1.0*good,
-            (good and "Answer is correct") or "Answer is incorrect",
+            (good and "answer is correct") or "answer is incorrect",
             str(value),
             "{ref} (± {tol})".format(ref=ref, tol=tol))
 
