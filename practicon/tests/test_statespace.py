@@ -111,6 +111,19 @@ def test_statespace():
     # assert score == 0.5
     # assert result == 'system is not minimal realization'
 
+    def myfunc2(variant: int):
+        s = TransferFunction.s
+        tf = (1+ 0.5*s)/(s**3+3*s**2+2*s +17)
+        sysx = tf2ss(tf)
+        return locals()
+    
+    check6 = CheckStateSpace('sysx', 0.01, 0.01, 1)
+    ref6 = check6.encode(1, myfunc2)
+    testname, score, result, sa, modelanswer = check6(
+        0, ref6, dict(sysx=conv(myfunc2(0)['sysx'])))
+    assert score == 1.0
+    print(result, sa, modelanswer)
+
 
 if __name__ == '__main__':
     test_statespace()
