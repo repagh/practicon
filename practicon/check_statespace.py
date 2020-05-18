@@ -301,10 +301,14 @@ class CheckStateSpace:
             Ds = value.D
             n = As.shape[0]
 
-            # round off to 2+size digits
+            """
+            As, Bs, Cs, Ds = value.A, value.B, value.C, value.D
+            n = As.shape[0]
+
+            # round off to 6+size digits
             def tolround(x):
                 tol = max(self.d_abs, abs(self.d_rel*x))
-                return round(x, 2+n-int(log10(tol)))
+                return round(x, 6+n//2-int(log10(tol)))
 
             tolround = np.vectorize(tolround)
 
@@ -312,11 +316,6 @@ class CheckStateSpace:
                         tolround(Bs).tolist(),
                         tolround(Cs).tolist(),
                         tolround(Ds).tolist()))
-            """
-            ref.append((value.A.tolist(),
-                        value.B.tolist(),
-                        value.C.tolist(),
-                        value.D.tolist()))
 
         enc = json.JSONEncoder(ensure_ascii=True)
         return b64encode(
