@@ -61,6 +61,12 @@ class CheckMatrix:
         self.d_rel = d_rel
         self.threshold = threshold
 
+    def _return(self, fraction, report, value, ref, tol):
+        """Produce return value."""
+        return ("Matrix '{var}'".format(var=self.var),
+                fraction, report, str(value),
+                "{ref}\n(± {tol})".format(ref=ref, tol=tol))
+
     def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
         Check whether a given answer is within tolerance.
@@ -111,6 +117,10 @@ class CheckMatrix:
         except KeyError:
             raise RuntimeWarning(
                 "Variable {var} not found".format(var=self.var))
+        except Exception:
+            return self._return(
+                0.0, "cannot interpret as matrix",
+                _globals[self.var], ref, tol)
 
         if ref.shape != value.shape:
             # accept 1d answers vs column or row ref, or the reverse
@@ -120,21 +130,17 @@ class CheckMatrix:
                 ref.size == value.size
                 value.reshape(ref.shape)
             elif ref.size != value.size:
-                return ("Matrix '{var}'".format(var=self.var),
-                        0.0,
-                        "incorrect matrix size",
-                        str(value),
-                        "{ref} (± {tol})".format(ref=ref, tol=tol))
+                return self._return(
+                    0.0, "incorrect matrix size",
+                    value, ref, tol)
             elif ref.shape == value.T.shape:
                 fails += 1
                 result.append("matrix is transposed")
                 value = value.transpose()
             else:
-                return ("Matrix '{var}'".format(var=self.var),
-                        0.0,
-                        "incorrect matrix shape",
-                        str(value),
-                        "{ref} (± {tol})".format(ref=ref, tol=tol))
+                return self._return(
+                    0.0, "incorrect matrix shape",
+                    value, ref, tol)
 
         try:
             nfails = np.count_nonzero(np.abs(ref - value) > tol)
@@ -143,20 +149,16 @@ class CheckMatrix:
                               "".format(nfails=nfails))
             fails += nfails
         except Exception:
-            return ("Matrix '{var}'".format(var=self.var),
-                    0.0,
-                    "cannot check variable as matrix",
-                    str(value),
-                    "{ref}\n(± {tol})".format(ref=ref, tol=tol))
+            return self._return(
+                0.0, "cannot check variable as matrix",
+                value, ref, tol)
 
         score = max((self.threshold + 1 - fails) / (self.threshold + 1), 0.0)
         good = fails == 0
-        return (
-            "Matrix '{var}'".format(var=self.var),
+        return self._return(
             score,
-            (good and "Answer is correct") or "Answer is incorrect",
-            str(value),
-            "{ref}\n(± {tol})".format(ref=ref, tol=tol))
+            (good and "answer is correct") or "\n".join(result),
+            value, ref, tol)
 
     def encode(self, nvariants: int, func):
         """

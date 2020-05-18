@@ -9,12 +9,15 @@ Test the CheckNumeric class.
 """
 
 try:
-    from practicon import CheckTransferFunction
-except ImportError:
     import sys
     import os
     sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
     from check_transferfunction import CheckTransferFunction
+    from tests.custom_json import conv
+except ImportError:
+    from practicon import CheckTransferFunction
+    from .custom_json import conv
+
 from control import TransferFunction
 import pytest
 
@@ -47,42 +50,43 @@ def test_transferfunction():
     assert check1(0, ref, locals())[1] == 0.0
 
     # set back to normal
-    a = TransferFunction([1, 1], [1, 1, 0])
+    a = conv(TransferFunction([1, 1], [1, 1, 0]))
 
     # succeed for all in range
     for v in range(1, 5):
-        testname, score, result, modelanswer = check1(v, ref, locals())
+        testname, score, result, sa, odelanswer = check1(v, ref, locals())
         # print(testname, score, result, modelanswer, sep='\n')
-        assert testname == "Check transfer function 'a'"
+        assert testname == "Transfer function 'a'"
         assert score < 1.0
         assert result != "answered correctly"
         # assert modelanswer == f"Reference {10+v} (± 0.1)"
 
     # correct answer
-    testname, score, result, modelanswer = check1(0, ref, locals())
-    assert testname == "Check transfer function 'a'"
+    testname, score, result, sa, modelanswer = check1(0, ref, locals())
+    assert testname == "Transfer function 'a'"
     assert score == 1.0
     assert result == "answered correctly"
+    assert sa == modelanswer
     # assert modelanswer == f"Reference {10} (± 0.1)"
 
     # with numerical stuff in numerator
-    a = TransferFunction([1.0e-17, 1, 1], [1, 1, 0])
+    a = conv(TransferFunction([1.0e-17, 1, 1], [1, 1, 0]))
     # correct answer
-    testname, score, result, modelanswer = check1(0, ref, locals())
-    assert testname == "Check transfer function 'a'"
+    testname, score, result, sa, modelanswer = check1(0, ref, locals())
+    assert testname == "Transfer function 'a'"
     assert score == 1.0
     assert result == "answered correctly"
 
     # ratio test
-    testname, score, result, modelanswer = check3(0, ref, locals())
+    testname, score, result, sa, modelanswer = check3(0, ref, locals())
     assert score == 1.0
     assert modelanswer == "\n s + 1\n-------\ns^2 + s\n"
 
     # incorrect number of zeros/poles
-    a = TransferFunction([1], [1, 1, 1, 0])
+    a = conv(TransferFunction([1], [1, 1, 1, 0]))
 
-    testname, score, result, modelanswer = check1(0, ref, locals())
-    assert testname == "Check transfer function 'a'"
+    testname, score, result, sa, modelanswer = check1(0, ref, locals())
+    assert testname == "Transfer function 'a'"
     assert score < 1.0
     assert result != "answered correctly"
     # assert modelanswer == f"Reference {10} (± 0.1)"

@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Check state-space systems.
+
 Created on Tue May 12 15:18:33 2020
 
 @author: repa
 """
 
+
 try:
-    from practicon import CheckStateSpace
-except ImportError:
     import sys
     import os
     sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
     from check_statespace import CheckStateSpace
+    from tests.custom_json import conv
+except ImportError:
+    from practicon import CheckStateSpace
+    from .custom_json import conv
+
 
 from control import TransferFunction
 import pytest
@@ -56,9 +62,9 @@ def test_statespace():
         Cb = np.zeros((1, 4))
         Cb[:, :3] = C
         sys5 = StateSpace(Ab, Bb, Cb, D)
-        #sys5.A = Ab
-        #sys5.B = Bb
-        #sys5.C = Cb
+        # sys5.A = Ab
+        # sys5.B = Bb
+        # sys5.C = Cb
         return locals()
 
     check1 = CheckStateSpace('sys1', 0.01, 0.01, 3)
@@ -68,39 +74,39 @@ def test_statespace():
     with pytest.raises(RuntimeWarning):
         check1(0, ref1, locals())
 
-    # wrong type for answer
+    # wrong type for answer, now also runtime warning
     sys1 = 'adfa'
-    testname, score, result, modelanswer = check1(0, ref1, locals())
-    assert score == 0.0
-    assert result == 'not a valid state-space system'
+    testname, score, result, sa, modelanswer = check1(0, ref1, locals())
 
     # correct answer
-    sys1 = myfunc(0)['sys1']
-    testname, score, result, modelanswer = check1(0, ref1, locals())
+    sys1 = conv(myfunc(0)['sys1'])
+    testname, score, result, sa, modelanswer = check1(0, ref1, locals())
     assert score == 1.0
     assert result == 'answer is correct'
+    # print(sa, modelanswer)
+    assert sa == modelanswer
 
     # modified, but still same function
-    testname, score, result, modelanswer = check1(
-        0, ref1, dict(sys1=myfunc(0)['sys2']))
+    testname, score, result, studentanswer, modelanswer = check1(
+        0, ref1, dict(sys1=conv(myfunc(0)['sys2'])))
     assert score == 1.0
 
     # Schur modified, but still same function
-    testname, score, result, modelanswer = check1(
-        0, ref1, dict(sys1=myfunc(0)['sys3']))
+    testname, score, result, sa, modelanswer = check1(
+        0, ref1, dict(sys1=conv(myfunc(0)['sys3'])))
     assert score == 1.0
 
     # D matrix affected
-    testname, score, result, modelanswer = check1(
-        0, ref1, dict(sys1=myfunc(0)['sys4']))
+    testname, score, result, sa, modelanswer = check1(
+        0, ref1, dict(sys1=conv(myfunc(0)['sys4'])))
     assert score == 0.75
     assert result == '1 incorrect elements in D matrix'
 
     # improperly reduced; does not work because StateSpace is so
     # efficient!
-    sys5 = myfunc(0)['sys5']
+    sys5 = conv(myfunc(0)['sys5'])
     # print(sys5)
-    testname, score, result, modelanswer = check1(
+    testname, score, result, sa, modelanswer = check1(
         0, ref1, dict(sys1=sys5))
     # assert score == 0.5
     # assert result == 'system is not minimal realization'

@@ -11,15 +11,18 @@ Test the CheckMatrix class.
 # to run as script, set the execution folder to practicon
 
 try:
-    from practicon import CheckMatrix
-except ImportError:
     import sys
     import os
     sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
     from check_matrix import CheckMatrix
+    from tests.custom_json import conv
+except ImportError:
+    from practicon import CheckMatrix
+    from .custom_json import conv
+
 import pytest
 import numpy as np
-
+import json
 
 def test_matrix():
 
@@ -47,34 +50,35 @@ def test_matrix():
     assert check1(0, ref, locals())[1] == 0.0
 
     # set back to normal
-    a = np.eye(2)
+    a = conv(np.eye(2))
 
     tol = np.array([[0.1, 0.1], [0.1, 0.1]])
 
     # succeed for all in range
     for v in range(1, 5):
-        testname, score, result, modelanswer = check1(v, ref, locals())
-        assert testname == "Check result 'a'"
+        testname, score, result, sa, modelanswer = check1(v, ref, locals())
+        assert testname == "Matrix 'a'"
         assert score == 0.0
-        assert result == "Answer is incorrect"
-        assert modelanswer == "Reference {v10} (± {tol})".format(
+        assert result == "1 incorrect elements"
+        ma_ref = "{v10}\n(± {tol})".format(
             v10=myfunc(v)['a'], tol=tol)
+        assert(modelanswer == ma_ref)
 
     # correct answer
-    testname, score, result, modelanswer = check1(0, ref, locals())
-    assert testname == "Check result 'a'"
+    testname, score, result, sa, modelanswer = check1(0, ref, locals())
+    assert testname == "Matrix 'a'"
     assert score == 1.0
-    assert result == "Answer is correct"
+    assert result == "answer is correct"
     # assert modelanswer == "Reference 10 (± 0.1)"
 
     # ratio test
-    testname, score, result, modelanswer = check3(0, ref, locals())
+    testname, score, result, sa, modelanswer = check3(0, ref, locals())
     assert score == 1.0
     # assert modelanswer == "Reference 10 (± 1.5)"
 
     # accept one failing for partial score
-    a[0, 1] = 10
-    testname, score, result, modelanswer = check4(0, ref, locals())
+    a[0][1] = 10
+    testname, score, result, sa, modelanswer = check4(0, ref, locals())
     assert score == 0.5
     # assert modelanswer == "Reference 10 (± 1.5)"
 
@@ -85,18 +89,18 @@ def test_matrix():
     ab1 = np.ones((3,)) + 1
     ab2 = np.ones((3, 1)) + 2
     ab3 = np.ones((4,))
-    testname, score, result, modelanswer = checkb1(1, refb1, dict(b1=ab1))
+    testname, score, result, sa, modelanswer = checkb1(1, refb1, dict(b1=ab1))
     assert score == 1
-    testname, score, result, modelanswer = checkb1(2, refb2, dict(b1=ab2))
+    testname, score, result, sa, modelanswer = checkb1(2, refb2, dict(b1=ab2))
     assert score == 1
-    testname, score, result, modelanswer = checkb2(2, refb1, dict(b2=ab2))
+    testname, score, result, sa, modelanswer = checkb2(2, refb1, dict(b2=ab2))
     assert score == 1
-    testname, score, result, modelanswer = checkb2(1, refb2, dict(b2=ab1))
+    testname, score, result, sa, modelanswer = checkb2(1, refb2, dict(b2=ab1))
     assert score == 1
-    testname, score, result, modelanswer = checkb2(2, refb2, dict(b2=a))
+    testname, score, result, sa, modelanswer = checkb2(2, refb2, dict(b2=a))
     assert score == 0
     assert result == "incorrect matrix size"
-    testname, score, result, modelanswer = check4(0, ref, dict(a=ab3))
+    testname, score, result, sa, modelanswer = check4(0, ref, dict(a=ab3))
     assert score == 0
     assert result == "incorrect matrix shape"
 

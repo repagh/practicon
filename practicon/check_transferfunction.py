@@ -57,6 +57,15 @@ class CheckTransferFunction:
         self.d_abs = d_abs
         self.d_rel = d_rel
 
+    def _return(self, fraction, report, value, ref):
+        """Produce check return value."""
+        return ("Transfer function '{var}'".format(var=self.var),
+                fraction,
+                report,
+                str(value),
+                str(TransferFunction(
+                    ref['num'], ref['den'], ref['dt'])))
+
     def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
         Check transfer function within range.
@@ -95,10 +104,14 @@ class CheckTransferFunction:
         # the variable
         try:
             tf = _globals[self.var]
-            tf = TransferFunction(tf['num'], tf['den'], tf['dt'])
         except KeyError:
             raise RuntimeWarning(
                 "Transfer function {} not found".format(self.var))
+        try:
+            tf = TransferFunction(tf['num'], tf['den'], tf['dt'])
+        except Exception:
+            return self._return(
+                0.0, "not a transfer function object", tf, ref)
 
         result = []
         score = 1.0
@@ -164,23 +177,15 @@ class CheckTransferFunction:
                 result.append('{npwrong} pole{s} or pole-pair{s}'
                               ' incorrect or missing'.format(**locals()))
 
-            return (
-                "Transfer function '{}'".format(self.var),
+            return self._return(
                 max(round(score, 3), 0.0),
-                (result and '\n'.join(result)) or
-                'answered correctly',
-                str(tf),
-                str(TransferFunction(
-                    ref['num'], ref['den'], ref['dt'])))
+                (result and '\n'.join(result)) or 'answered correctly',
+                tf, ref)
 
         except Exception:
-            return (
-                "Transfer function '{}'".format(self.var),
-                0.0,
-                "cannot analyse as transfer function",
-                str(tf),
-                str(TransferFunction(
-                    ref['num'], ref['den'], ref['dt'])))
+            return self._return(
+                0.0, "cannot analyse as transfer function",
+                tf, ref)
 
     def encode(self, nvariants: int, fn):
         """

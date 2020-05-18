@@ -155,6 +155,14 @@ class CheckStateSpace:
         self.d_rel = d_rel
         self.threshold = threshold
 
+    def _return(self, fraction, report, value, ref):
+        """Produce check return value."""
+        return ("State-space system '{var}'".format(var=self.var),
+                fraction,
+                report,
+                str(value),
+                str(ref))
+
     def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
         Check whether a given answer is within tolerance.
@@ -193,20 +201,23 @@ class CheckStateSpace:
         def within_tolerance(xr, x):
             return np.allclose(xr, x, self.d_rel, self.d_abs)
 
-        ref = ss_to_zpk(Aref, Bref, Cref)
-
         fails = 0
         try:
             value = _globals[self.var]
+        except KeyError:
+            raise RuntimeWarning(
+                "Variable {var} not found".format(var=self.var))
+        try:
             A = np.array(value["A"])
             B = np.array(value["B"])
             C = np.array(value["C"])
             D = np.array(value["D"])
             dt = value["dt"]
             value = StateSpace(A, B, C, D, dt)
-        except KeyError:
-            raise RuntimeWarning(
-                "Variable {var} not found or not valid".format(var=self.var))
+        except Exception:
+            return self._return(0.0, "is not a state-space system",
+                                _globals[self.var], sys_ref)
+
         report = []
         try:
             if A.shape != Aref.shape:
@@ -228,11 +239,8 @@ class CheckStateSpace:
                 report.append('incorrect number of outputs')
 
             if fails >= self.threshold:
-                return ("State-space system '{var}'".format(var=self.var),
-                        0.0,
-                        '\n'.join(report),
-                        str(value),
-                        "{ref}".format(ref=ref))
+                return self._return("\n".join(report), 0.0,
+                                    value, sys_ref)
 
             # d matrix
             ndfail = Dref.size - \
@@ -254,19 +262,13 @@ class CheckStateSpace:
                         report.extend(r)
 
         except Exception:
-            return ("State-space system '{var}'".format(var=self.var),
-                    0.0,
-                    "not a valid state-space system",
-                    str(value),
-                    str(sys_ref))
+            return self._return(0.0, "not a valid state-space system",
+                                value, sys_ref)
 
         score = max((self.threshold + 1 - fails) / (self.threshold + 1), 0.0)
-        return (
-            "State-space system '{var}'".format(var=self.var),
-            score,
-            (not report and "answer is correct") or "\n".join(report),
-            str(value),
-            str(sys_ref))
+        return self._return(
+            score, (not report and "answer is correct") or "\n".join(report),
+            value, sys_ref)
 
     def encode(self, nvariants: int, func):
         """
@@ -290,6 +292,7 @@ class CheckStateSpace:
             res = func(_v)
             value = res[self.var]
 
+            """
             # balance the ABCD system, for robustness, to real shur form
             As, Z = schur(value.A)
             Bs = Z.T @ value.B
@@ -303,10 +306,16 @@ class CheckStateSpace:
                 return round(x, 2+n-int(log10(tol)))
 
             tolround = np.vectorize(tolround)
+
             ref.append((tolround(As).tolist(),
                         tolround(Bs).tolist(),
                         tolround(Cs).tolist(),
                         tolround(Ds).tolist()))
+            """
+            ref.append((value.A.tolist(),
+                        value.B.tolist(),
+                        value.C.tolist(),
+                        value.D.tolist()))
 
         enc = json.JSONEncoder(ensure_ascii=True)
         return b64encode(
