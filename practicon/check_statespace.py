@@ -239,7 +239,7 @@ class CheckStateSpace:
                 report.append('incorrect number of outputs')
 
             if fails >= self.threshold:
-                return self._return("\n".join(report), 0.0,
+                return self._return(0.0, "\n".join(report),
                                     value, sys_ref)
 
             # d matrix
@@ -265,7 +265,8 @@ class CheckStateSpace:
             return self._return(0.0, "not a valid state-space system",
                                 value, sys_ref)
 
-        score = max((self.threshold + 1 - fails) / (self.threshold + 1), 0.0)
+        score = max(round(
+            (self.threshold + 1 - fails) / (self.threshold + 1), 3), 0.0)
         return self._return(
             score, (not report and "answer is correct") or "\n".join(report),
             value, sys_ref)

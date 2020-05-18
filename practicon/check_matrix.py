@@ -153,7 +153,8 @@ class CheckMatrix:
                 0.0, "cannot check variable as matrix",
                 value, ref, tol)
 
-        score = max((self.threshold + 1 - fails) / (self.threshold + 1), 0.0)
+        score = max(
+            round((self.threshold + 1 - fails) / (self.threshold + 1), 3), 0.0)
         good = fails == 0
         return self._return(
             score,
