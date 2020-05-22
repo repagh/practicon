@@ -13,3 +13,4 @@ from .check_numeric import CheckNumeric
 from .check_transferfunction import CheckTransferFunction
 from .check_matrix import CheckMatrix
 from .check_statespace import CheckStateSpace
+from .check_truefalse import CheckTrueFalse
