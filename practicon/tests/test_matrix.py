@@ -10,15 +10,8 @@ Test the CheckMatrix class.
 
 # to run as script, set the execution folder to practicon
 
-try:
-    import sys
-    import os
-    sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
-    from check_matrix import CheckMatrix
-    from tests.custom_json import conv
-except ImportError:
-    from practicon import CheckMatrix
-    from .custom_json import conv
+from practicon import CheckMatrix
+from .custom_json import conv
 
 import pytest
 import numpy as np
@@ -34,9 +27,12 @@ def test_matrix():
 
     # reference function
     def myfunc(variant: int):
-        return {'a': np.eye(2) + np.matrix(((0, 1), (0, 0))) * variant,
+        return {'a': np.eye(2) + np.array(((0, 1), (0, 0))) * variant,
                 'b1': np.ones((3,)) + variant,
-                'b2': np.ones((3, 1)) + variant}
+                'b2': np.ones((3, 1)) + variant,
+                'asp' :
+            repr((np.eye(2) + np.array(((0, 1), (0, 0))) * variant).tolist()),
+                'asm' : """[1 2; 3 4]"""}
 
     # generate encoding
     ref = check1.encode(5, myfunc)
@@ -103,6 +99,14 @@ def test_matrix():
     testname, score, result, sa, modelanswer = check4(0, ref, dict(a=ab3))
     assert score == 0
     assert result == "incorrect matrix shape"
+
+
+    check5 = CheckMatrix('asp,', 0.01, 0.01)
+    ref5 = check5.encode(3, myfunc)
+    check6 = CheckMatrix('asm,', 0.01, 0.01)
+    ref6 = check6.encode(3, myfunc)
+    testname, score, result, sa, modelanswer = check5(1, ref5, myfunc(1))
+    testname, score, result, sa, modelanswer = check6(1, ref6, myfunc(1))
 
 
 if __name__ == '__main__':

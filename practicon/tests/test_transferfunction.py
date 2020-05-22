@@ -8,15 +8,8 @@ Test the CheckNumeric class.
 @author: repa
 """
 
-try:
-    import sys
-    import os
-    sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
-    from check_transferfunction import CheckTransferFunction
-    from tests.custom_json import conv
-except ImportError:
-    from practicon import CheckTransferFunction
-    from .custom_json import conv
+from practicon import CheckTransferFunction
+from .custom_json import conv
 
 from control import TransferFunction
 import pytest

@@ -8,17 +8,8 @@ Created on Tue May 12 15:18:33 2020
 @author: repa
 """
 
-
-try:
-    import sys
-    import os
-    sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
-    from check_statespace import CheckStateSpace
-    from tests.custom_json import conv
-except ImportError:
-    from practicon import CheckStateSpace
-    from .custom_json import conv
-
+from practicon import CheckStateSpace
+from .custom_json import conv
 
 from control import TransferFunction
 import pytest
@@ -124,6 +115,24 @@ def test_statespace():
     assert score == 1.0
     print(result, sa, modelanswer)
 
+    def myfunc3(variant: int):
+        s = TransferFunction.s
+        tf = (1+ 0.5*s)/(s**3+3*s**2+2*s +17)
+        sysx = tf2ss(tf)
+        A = str(sysx.A.tolist())
+        B = str(sysx.B.tolist())
+        C = str(sysx.C.tolist())
+        D = str(sysx.D.tolist())
+        return locals()
+
+    check7 = CheckStateSpace('A,B,C,D', 0.01, 0.01, 1)
+    ref7 = check7.encode(1, myfunc3)
+    testname, score, result, sa, modelanswer = check7(
+        0, ref7, dict(
+            A=conv(myfunc3(0)['A']), B=conv(myfunc3(0)['B']),
+            C=conv(myfunc3(0)['C']), D=conv(myfunc3(0)['D'])))
+    assert score == 1.0
+    print(result, sa, modelanswer)
 
 if __name__ == '__main__':
     test_statespace()

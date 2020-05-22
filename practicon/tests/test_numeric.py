@@ -8,14 +8,7 @@ Test the CheckNumeric class.
 @author: repa
 """
 
-try:
-    from practicon import CheckNumeric
-except ImportError:
-    import sys
-    import os
-    sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
-    from check_numeric import CheckNumeric
-
+from practicon import CheckNumeric
 import pytest
 
 
@@ -45,23 +38,23 @@ def test_numeric():
 
     # succeed for all in range
     for v in range(1, 5):
-        testname, score, result, modelanswer = check1(v, ref, locals())
-        assert testname == "Check result 'a'"
+        testname, score, result, sa, modelanswer = check1(v, ref, locals())
+        assert testname == "Value 'a'"
         assert score == 0.0
-        assert result == "Answer is incorrect"
-        assert modelanswer == "Reference {v10} (± 0.1)".format(v10=v+10)
+        assert result == "answer is incorrect"
+        assert modelanswer == "{v10} (± 0.1)".format(v10=v+10)
 
     # correct answer
-    testname, score, result, modelanswer = check1(0, ref, locals())
-    assert testname == "Check result 'a'"
+    testname, score, result, sa, modelanswer = check1(0, ref, locals())
+    assert testname == "Value 'a'"
     assert score == 1.0
-    assert result == "Answer is correct"
-    assert modelanswer == "Reference 10 (± 0.1)"
+    assert result == "answer is correct"
+    assert modelanswer == "10 (± 0.1)"
 
     # ratio test
-    testname, score, result, modelanswer = check3(0, ref, locals())
+    testname, score, result, sa, modelanswer = check3(0, ref, locals())
     assert score == 1.0
-    assert modelanswer == "Reference 10 (± 1.5)"
+    assert modelanswer == "10 (± 1.5)"
 
 
 if __name__ == '__main__':

@@ -11,9 +11,9 @@ from math import log10
 import numpy as np
 from scipy import signal
 from control import StateSpace, minreal
-from scipy.linalg import schur
 from base64 import b64encode, b64decode
 import zlib as cmpr
+from matrixparser import parseMatrix
 
 
 class ZPK:
@@ -151,6 +151,16 @@ class CheckStateSpace:
         1.1
 
         """
+        # check four variables options
+        if ',' in var:
+            vnames = map(str.strip, var.split(','))
+            if len(list(vnames)) != 4:
+                raise ValueError("incomplete variables ABCD")
+            for i in vnames:
+                if not i.isidentifier():
+                    raise ValueError("Incorrect variable name '{}'".format(i))
+        elif not var.isidentifier():
+            raise ValueError("Incorrect variable name '{}'".format(i))
         self.var = var
         self.d_abs = d_abs
         self.d_rel = d_rel
@@ -163,6 +173,22 @@ class CheckStateSpace:
                 report,
                 str(value),
                 str(ref))
+
+    def _extractValue(self, _dict, forcheck=False):
+        if ',' in self.var:
+            value = {"dt": 0}
+
+            # string-loaded variables
+            vnames = map(str.strip, self.var.split(','))
+            for m, v in zip("ABCD", vnames):
+                value[m] = parseMatrix(
+                    m, "{} = {}".format(m, _dict[v]))
+            if forcheck:
+                value = StateSpace(value["A"], value["B"],
+                                   value["C"], value["D"])
+        else:
+            value = _dict[self.var]
+        return value
 
     def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
@@ -204,10 +230,13 @@ class CheckStateSpace:
 
         fails = 0
         try:
-            value = _globals[self.var]
+            value = self._extractValue(_globals)
         except KeyError:
             raise RuntimeWarning(
                 "Variable {var} not found".format(var=self.var))
+        except ValueError as v:
+            raise RuntimeWarning(str(v))
+
         try:
             A = np.array(value["A"])
             B = np.array(value["B"])
@@ -292,7 +321,7 @@ class CheckStateSpace:
         ref = []
         for _v in range(nvariants):
             res = func(_v)
-            value = res[self.var]
+            value = self._extractValue(res, True)
 
             """
             # balance the ABCD system, for robustness, to real shur form

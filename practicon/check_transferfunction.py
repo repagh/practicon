@@ -11,6 +11,7 @@ from base64 import b64encode, b64decode
 import json
 import numpy as np
 import zlib as cmpr
+from matrixparser import parseMatrix
 
 
 class CheckTransferFunction:
@@ -53,6 +54,15 @@ class CheckTransferFunction:
         None.
 
         """
+        if ',' in var:
+            vnames = map(str.strip, var.split(','))
+            if len(list(vnames)) != 2:
+                raise ValueError("incomplete variables num, den")
+            for i in vnames:
+                if not i.isidentifier():
+                    raise ValueError("Incorrect variable name '{}'".format(i))
+        elif not var.isidentifier():
+            raise ValueError("Incorrect variable name '{}'".format(i))
         self.var = var
         self.d_abs = d_abs
         self.d_rel = d_rel
@@ -65,6 +75,21 @@ class CheckTransferFunction:
                 str(value),
                 str(TransferFunction(
                     ref['num'], ref['den'], ref['dt'])))
+
+    def _extractValue(self, _dict, forcheck=False):
+        if ',' in self.var:
+            value = {"dt": 0.0}
+
+            # string-loaded variables
+            vnames = map(str.strip, self.var.split(','))
+            for m, v in zip(("num", "den"), vnames):
+                value[m] = parseMatrix(
+                    v, "{} = {}".format(v, _dict[v]))
+            if forcheck:
+                value = TransferFunction(value["num"][0], value["den"][0])
+        else:
+            value = _dict[self.var]
+        return value
 
     def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
@@ -103,7 +128,7 @@ class CheckTransferFunction:
         # get the tf. If this throws, show mercy and let student provide
         # the variable
         try:
-            tf = _globals[self.var]
+            tf = self._extractValue(_globals)
         except KeyError:
             raise RuntimeWarning(
                 "Transfer function {} not found".format(self.var))
@@ -208,7 +233,7 @@ class CheckTransferFunction:
         ref = []
         for v in range(nvariants):
             res = fn(v)
-            tf = res[self.var]
+            tf = self._extractValue(res, True)
             num, den, dt = tf.num[0][0], tf.den[0][0], tf.dt
             num, den = self._cleanup(num), self._cleanup(den)
             ref.append(dict(num=num.tolist(), den=den.tolist(), dt=dt))

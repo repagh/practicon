@@ -11,6 +11,7 @@ from base64 import b64encode, b64decode
 from math import log10
 import numpy as np
 import zlib as cmpr
+from matrixparser import parseMatrix
 
 
 class CheckMatrix:
@@ -56,6 +57,16 @@ class CheckMatrix:
         1.1
 
         """
+        if ',' in var:
+            vnames = [n.strip() for n in var.split(',') if n.strip()]
+            if len(list(vnames)) != 1:
+                raise ValueError("incomplete variables matrix")
+            for i in vnames:
+                if not i.isidentifier():
+                    raise ValueError("Incorrect variable name '{}'".format(i))
+        elif not var.isidentifier():
+            raise ValueError("Incorrect variable name '{}'".format(i))
+
         self.var = var
         self.d_abs = d_abs
         self.d_rel = d_rel
@@ -66,6 +77,19 @@ class CheckMatrix:
         return ("Matrix '{var}'".format(var=self.var),
                 fraction, report, str(value),
                 "{ref}\n(± {tol})".format(ref=ref, tol=tol))
+
+    def _extractValue(self, _dict, forcheck=False):
+        if ',' in self.var:
+
+            # string-loaded variables
+            v = [n.strip() for n in self.var.split(',') if n.strip()][0]
+            value = parseMatrix(
+                v, "{} = {}".format(v, _dict[v]))
+            if forcheck:
+                value = np.array(value)
+        else:
+            value = _dict[self.var]
+        return value
 
     def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
@@ -113,7 +137,7 @@ class CheckMatrix:
         result = []
         fails = 0
         try:
-            value = np.array(_globals[self.var])
+            value = np.array(self._extractValue(_globals))
         except KeyError:
             raise RuntimeWarning(
                 "Variable {var} not found".format(var=self.var))
@@ -181,7 +205,7 @@ class CheckMatrix:
         ref = []
         for _v in range(nvariants):
             res = func(_v)
-            value = res[self.var]
+            value = self._extractValue(res, True)
 
             # round off to two more digits than the precision of the
             # tolerance matrix elements

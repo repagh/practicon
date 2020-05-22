@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+<!-- question: 24  -->
+  <question type="coderunner">
+    <name>
+      <text>PROTOTYPE_python3_practicon</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[<h3>PRACTICON</h3><h4>Introduction</h4><p>This question type provides programmatic comparison/checking of numeric answers, geared to control theory quizzes and exams. It uses the CodeRunner question type for Moodle, with some adjustments. The following answers can be checked:</p><p></p><ul><li>Numeric answers, checked with an absolute and relative (with respect to the answer value) margin.</li><li>Transfer functions, checked for pole and zero locations, and gain. Cancelling pole/zero pairs are marked as errors.&nbsp;</li><li>Matrices, all elements are checked with an absolute and relative margin.&nbsp;</li><li>State-space systems, verified to be correct regardless of choice for state variables. Additional states above minimal realization are marked as errors.&nbsp;</li><li>True-false values.</li></ul><h4>Defining a question</h4><p>Write a function "ref_answer" that calculates the answers for a given question variant. You may use the variant (an integer, randomly chosen per student) to create variations in the question parameters. Note that you must carefully coordinate these variations in the question text too, see "Template params" later. The ref_answer function returns a dictionary with the "answers" for a given variant. Here is an example:</p><pre>from control import TransferFunction
+def ref_answer(variant):
+    tau = parameters["tau"][variant]
+    s = TransferFunction.s
+    answer_tf = 1/(tau*s + 1)
+    return locals()
+</pre><p>Returning a dict "locals()" is a trick to quickly return a dictionary with variables entered. The question variable is in this case "answer_tf".</p><p>Keep the default options for the question type, specifically "precheck" - all, "feedback" - force show, and keep "all-or-nothing grading" unselected. Since the ref_answer function is slightly different from what students are supposed to write, remove the presentation of the reference answer from the student feedback, see the options below the preview.</p><h4>Check cases</h4><p>Checking is performed by the template for the question, in combination with a number of routines in a practicon python module. Each variable / answer given by the student is checked by the code in a single "test case", which needs to create a check variable.</p><p></p><ul><li>CheckNumeric(var: str, d_abs: float, d_rel: float)<br>checks a numeric answer, with absolute tolerance d_abs, and relative tolerance d_rel. var is the name of the variable in the student answer.&nbsp;</li><li>CheckTransferFunction(var: str, d_abs: float, d_rel: float)<br>checks a transfer function. Single transfer function only, i.e., one input, one output. Tolerances are applied to gain and pole/zero locations.</li><li>CheckMatrix(var: str, d_abs: float, d_rel: float)<br>checks a matrix.</li><li>CheckStateSpace(var: str, d_abs: float, d_rel: float)<br>checks a state-space system, multi-input, multi-output</li><li>CheckTrueFalse(var: str)<br>check a true/false variable</li></ul><p>To create the data for the checks, empty <span>the</span>&nbsp;"Expected output" fields, and start the preview. Enter some code in the answer field, and run the precheck. The "Result" columns now contain the check values as encoded strings, these must be pasted (fully!) in the&nbsp;"Expected output" fields. After this step, the question is ready for use.</p><h4>Template params field</h4><p>The template params are used to further configure the question. With a special field, the random seed for the question can be set.&nbsp;</p><pre>{{- set_random_seed(STUDENT.id) -}}</pre><p></p><p>For variation of the question parameters, the question type needs to know the number of variants and a chosen variant.&nbsp;</p><pre>{ "nvariants": 3, "variant" : {{ random(2) }}, "answerfeedback" : 1 }</pre><p>This example uses three variants. The random function will give a number between 0 and 2 inclusive, therefore matching the three variants. Make sure this matches, if nvariants is too small, a portion of your students will receive an error.&nbsp; You can use the "answerfeedback" variable to enable or prevent feedback on the score on individual questions and on what the correct answer is. <br></p><p>If answerfeedback is 0, students only get information on whether they supplied the correct answer variables. If you want to get more meaningful feedback on the answers later, set answerfeedback to "1" later, and regrade the quiz. <br></p><p>Precheck should always be enabled. With a precheck, feedback is given on whether students supply the right variables with their answers. The type of variable is not indicated at this phase, if a student answers a transfer function when a state-space system is requested, there are no points.&nbsp;</p><p>If you want to change a variable in your question according to the variant, it is best to put these in the question parameters too, like:</p><p></p><pre>{ "nvariants": 3, "variant" : {{ random(2) }}, "answerfeedback" : 1,
+  "tau": [1.0, 1.1, 1.15]}</pre>These variable lists are available to your "ref_answer" function in the (global) dictionary variable parameters, so for this example:<p></p><p></p><pre>tau = parameters["tau"][variant]</pre><p>will be the tau variable corresponding to a specific variant. This value may be entered in the text of your question as:</p><pre><span style="font-size: 0.9375rem;">{{ QUESTION.parameters.tau[QUESTION.parameters.variant] }}</span></pre><p><span style="font-size: 0.9375rem;">or simply</span></p><pre><span style="font-size: 0.9375rem;">{{ tau[variant] }}</span></pre><p><span style="font-size: 0.9375rem;">if you selected parameter hoisting.</span></p><br><p></p><p></p>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>python3_practicon</coderunnertype>
+    <prototypetype>2</prototypetype>
+    <allornothing>0</allornothing>
+    <penaltyregime>10, 20, ...</penaltyregime>
+    <precheck>4</precheck>
+    <showsource>0</showsource>
+    <answerboxlines>18</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload>from control import TransferFunction, tf2ss
+import numpy as np
+
+a = {{ 5 + variant*0.2 }}
+s = TransferFunction.s
+tf = (1+{{ tau[variant] }} * s)/(s**3+3*s**2+2*s +17)
+I = np.eye(3)*a
+sys = tf2ss(tf)</answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[__student_program__ = r"""
+{{ STUDENT_ANSWER | e('py') }}
+
+'''
+student id:       {{ STUDENT.id }}
+student username: {{ STUDENT.username }}
+'''
+
+# import libraries with desired types
+import control
+import numpy
+import json
+
+# extend a json serializer
+class PRJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, control.TransferFunction):
+            return {'__class__': 'TransferFunction', 
+                    'num': obj.num, 'den': obj.den, 'dt': obj.dt}
+        elif isinstance(obj, control.StateSpace):
+            return {'__class__': 'StateSpace',
+                    'A': obj.A, 'B': obj.B,
+                    'C': obj.C, 'D': obj.D, 'dt': obj.dt}
+        elif isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, (numpy.int64, numpy.int32, numpy.int16, 
+                              numpy.int8, numpy.uint64, numpy.uint32,
+                              numpy.uint16, numpy.uint8)):
+            return int(obj)
+        elif isinstance(obj, (numpy.float64, numpy.float32)):
+            return float(obj)
+        elif isinstance(obj, (numpy.complex128, numpy.complex64)):
+            return complex(obj)
+        elif isinstance(numpy.bool_):
+            return bool(obj)
+        return json.JSONEncoder.default(self, obj)
+encoder = PRJSONEncoder()
+
+# copy variables left by the student, prevent accidental clash with variable
+# names in this script
+__student_dict__ = {}
+for k, v in locals().copy().items():
+    if k[:2] != '__':
+        try:
+            encoder.encode(v)
+            __student_dict__[k] = v
+        except TypeError:
+            print("'{}' cannot be serialised with JSON".format(k))
+
+# print variables as a json struct
+print('\n<#@1234509876@#>')
+print(encoder.encode(__student_dict__))
+"""
+
+import json
+import sys
+import subprocess
+from practicon import CheckNumeric, CheckTransferFunction, \
+    CheckMatrix, CheckStateSpace, CheckTrueFalse
+from control import TransferFunction, StateSpace
+
+# figure out if we need to generate reference or run student code and test
+complete = True
+{% for TEST in TESTCASES %}
+ref = {{ TEST.expected|length }}
+complete = complete and ref > 1
+{% endfor %}
+
+# if complete, run the student's code
+if complete:
+
+    output = []
+    failed = True
+    try:
+        outcome = subprocess.run(
+            ['python3', '-c', __student_program__],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout = 2, # 2 second timeout MUST BE LESS THAN DEFAULT FOR QUESTION TYPE
+            universal_newlines=True,
+            check=True
+        )
+        
+        if outcome.stderr:
+            output.append("*** Error output ***\n")
+            output.extend(('<pre>', outcome.stderr, '</pre>'))
+
+        __student_dict__ = json.loads(
+            outcome.stdout.split('\n<#@1234509876@#>\n')[-1])
+        failed = False
+    
+    except subprocess.CalledProcessError as e:
+        output.append("Program failed.")
+        output.append("*** Error output ***\n")
+        output.extend(('<pre>', e.stderr, '</pre>'))
+
+    except subprocess.TimeoutExpired as e:
+        output.append("Program timed out.")
+        output.append("*** Error output ***\n")
+        output.extend(('<pre>', e.stderr, '</pre>'))
+
+    except Exception as e:
+        output.append("Error when reading process output: {}".format(e))
+
+    if failed:
+        print(json.dumps({ 'fraction': 0.0, 'testresults': [], 
+            'epiloguehtml': '<br>'.join(output) }))
+        sys.exit(1)
+    
+
+#"""
+#{x { dump() } x}
+#"""
+
+# load the configuration parameters
+parameters = json.loads("""{{ QUESTION.parameters|json_encode|raw }}""")
+
+# function with the question reference code
+{{ QUESTION.answer }}
+
+# variant, if defined, selects a specific question configuration
+variant = "{{ QUESTION.parameters.variant }}"
+variant = (variant and int(variant)) or 0
+nvariants = "{{ QUESTION.parameters.nvariants }}"
+nvariants = (nvariants and int(nvariants)) or 1
+
+sum_score, sum_points = 0.0, 0.0
+is_precheck = {{ IS_PRECHECK }}
+display_feedback = {{ QUESTION.parameters.answerfeedback }}
+hide_result = is_precheck or (not display_feedback) 
+
+
+# room for the result object
+if complete:
+    __result = {
+        'testresults':
+        [ ['iscorrect', 'testcode', 'got', 'awarded', 
+           'studentanswer', 'expected'] ]
+    }
+else:
+    __result = {
+        'fraction': 1.0,
+        'testresults':
+        [[ 'got' ]]
+    }
+    
+{% for TEST in TESTCASES %}
+ref = """{{ TEST.expected }}"""
+check = {{ TEST.testcode }}
+
+# if refs not empty, we are in question asking mode. Check each answer
+if complete:
+    try:
+        sum_points += {{ TEST.mark }}
+        testname, score, result, studentanswer, modelanswer = check(
+            variant, ref, __student_dict__)
+        if hide_result:
+            okmark = None
+        else:
+            okmark = score == 1.0
+
+        __result['testresults'].append(
+            [ okmark, 
+              testname, 
+              (hide_result and "variable exists") or result, 
+              (hide_result and "hidden") or score,
+              studentanswer,
+              (hide_result and "--") or modelanswer])
+              
+        sum_score += {{ TEST.mark }} * score
+
+    except RuntimeWarning as e:
+        __result['testresults'].append(
+            [ False,
+              "Check '{}'".format(check.var),
+              "missing variable",
+              (hide_result and "hidden") or 0.0,
+              "", '--'
+            ])
+
+else:
+        
+    # generate coded answer strings
+    _ref = check.encode(nvariants, ref_answer)
+    __result['testresults'].append([_ref])
+    
+{% endfor %}
+
+# if only generating reference data, quickly return
+if not complete:
+    print(json.dumps(__result))
+    sys.exit(0)
+
+fraction = sum_score/sum_points
+if __result.get('abort', False):
+    __result['fraction'] = (hide_result and 0.00002) or 0.0
+elif sum_points:
+    __result['fraction'] = (
+        hide_result and max(0.00002, min(fraction, 0.99998))) or fraction
+else:
+    __result['fraction'] = (hide_result and 0.99998) or 1.0
+
+def tablerow(row, rowdata, lastrow=''):
+    res = [ '<tr class="r{} {}">'.format(row % 2, lastrow) ]
+    res.append('<td class="cell c0" style><i class="icon fa ')
+    if rowdata[0] is None:
+        res.append('fa-hand-o-right text-success fa-fw" title="Found"'
+            ' aria-label="Found">')
+    elif rowdata[0]:
+        res.append('fa-check text-success fa-fw" title="Correct"'
+            ' aria-label="Correct">')
+    else:
+        res.append('fa-remove text-danger fa-fw" title="Incorrect"'
+            ' aria-label="Incorrect">')
+    res.append('</i></td>')
+    for c, it in enumerate(rowdata[1:-1]):
+        res.append(
+            '<td class="cell c{}"><pre class="tablecell">{}</pre></td>'
+            ''.format(c+1, it))
+    res.append(
+        '<td class="cell c{} lastcol"><pre class="tablecell">{}</pre></td>'
+        ''.format(len(rowdata)-1, rowdata[-1]))
+    res.append('</tr>')
+    return ''.join(res)
+    
+html = [ """<div class="coderunner-test-results">
+<table class="coderunner-test-results"><thead>
+<tr><th class="header c0"></th><th class="header c1">Test</th>
+<th class="header c2">Result</th><th class="header c3">Awarded</th>
+<th class="header c4">Your answer</th>
+<th class="header c5">Expected</th></tr></thead><tbody>""" ]
+for i in range(1,len(__result['testresults'])):
+    html.append(tablerow(i, __result['testresults'][i], 
+        (i+1 == len(__result['testresults']) and " lastrow") or ""))
+html.append('</tbody></table></div>')
+
+
+__result['epiloguehtml'] = ''.join(html)
+__result['showoutputonly'] = True
+
+# del __result['testresults']
+
+print(json.dumps(__result))
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>1</allowmultiplestdins>
+    <answer>from control import TransferFunction, tf2ss
+import numpy as np
+
+def ref_answer(variant):
+    a = 5 + variant*0.2
+    tau = parameters['tau'][variant]
+    s = TransferFunction.s
+    tf = (1+tau*s)/(s**3+3*s**2+2*s +17)
+    I = np.eye(3)*a
+    sys = tf2ss(tf)
+    gamble = variant % 2 == 0
+    del s
+    return locals()</answer>
+    <validateonsave>0</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>python3</language>
+    <acelang>python3</acelang>
+    <sandbox></sandbox>
+    <grader>TemplateGrader</grader>
+    <cputimelimitsecs>5</cputimelimitsecs>
+    <memlimitmb>1024</memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams><![CDATA[{{- set_random_seed(STUDENT.id) -}}
+{ "nvariants": 3, "variant" : {{ random(2) }}, "answerfeedback" : 0,
+  "tau": [0.4, 0.5, 0.7]} ]]></templateparams>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <twigall>1</twigall>
+    <uiplugin>ace</uiplugin>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <testcases>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text>CheckNumeric('a', 0.1, 0.01)</text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>eJyLNtUz0FEw1TMCESaxABh6AxA=</text>
+      </expected>
+      <extra>
+                <text></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text>CheckTransferFunction('tf', 0.01, 0.001)</text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>eJyLrlbKK81VslKINtAz0VEw1DOI1VFQSikBihiAGKl5IDmgsI6CMYgwAhGG5kBltToKSHpNKdBrTpreWACqbyjl
+</text>
+      </expected>
+      <extra>
+                <text></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text>CheckStateSpace('sys', 0.01, 0.01)</text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>eJyLjo6O1jXWM9BRMNAz0lEw1DOP1VGI1jU0gAhBCJAQmG0IEwCJAFXBpWAUWBymzQREGsLFYiEs3NbpwklUC3WJttGUSjYSbaE5hoWxAPA5SS4=
+</text>
+      </expected>
+      <extra>
+                <text></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text>CheckMatrix('I', 0.0001, 0.0001)</text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>eJyLjo421TPQUTCAErE6CtFgtim6AEw0FiQC1GSEVZMRVk1GME0mWDWZYNVkEhsbCwAUjiBK
+</text>
+      </expected>
+      <extra>
+                <text></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text>CheckTrueFalse('gamble')</text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>W3RydWUsIGZhbHNlLCB0cnVlXQ==
+</text>
+      </expected>
+      <extra>
+                <text></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+    </testcases>
+  </question>
+
+</quiz>

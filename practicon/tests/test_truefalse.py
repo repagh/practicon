@@ -8,13 +8,7 @@ Created on Mon May 18 16:46:33 2020
 @author: repa
 """
 
-try:
-    import sys
-    import os
-    sys.path.append(os.sep.join(__file__.split(os.sep)[:-2]))
-    from check_truefalse import CheckTrueFalse
-except ImportError:
-    from practicon import CheckTrueFalse
+from practicon import CheckTrueFalse
 
 import pytest
 
