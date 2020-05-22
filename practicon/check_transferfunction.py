@@ -43,7 +43,9 @@ class CheckTransferFunction:
         Parameters
         ----------
         var : str
-            Variable name to check.
+            Variable name to check. Can also be a comma-separated set
+            of names for the numerator and denominator arrays. These are
+            then read from strings with Python or Matlab compatibility.
         d_abs : float
             Absolute error margin.
         d_rel : float, optional

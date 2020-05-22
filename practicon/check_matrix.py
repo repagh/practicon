@@ -25,7 +25,9 @@ class CheckMatrix:
         Parameters
         ----------
         var : str
-            Variable name to check.
+            Variable name to check. If this contains (start/ends with a) a 
+            comma (','), the matrix is parsed from a string with Python or 
+            Matlab syntax.
         d_abs : float, optional
             Absolute error margin.
         d_rel : float, optional
