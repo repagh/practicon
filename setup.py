@@ -17,7 +17,7 @@ Operating System :: Unix
 
 setup(
     name='practicon',
-    version='0.2',
+    version='0.3',
     author='Rene van Paassen',
     author_email='rene.vanpaassen@gmail.com',
     url='https://gitlab.tudelft.nl/rvanpaassen/practicon',
@@ -25,7 +25,8 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     classifiers=[f for f in CLASSIFIERS.split('\n') if f],
-    install_requires=('numpy', 'scipy', 'control', 'slycot', 'json5'),
+    install_requires=('numpy', 'scipy', 'control', 'slycot', 'json5',
+                      'zlib', 'pyparsing'),
     tests_require=('pytest'),
     test_suite='pytest'
 )

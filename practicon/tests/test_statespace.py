@@ -8,8 +8,7 @@ Created on Tue May 12 15:18:33 2020
 @author: repa
 """
 
-from practicon import CheckStateSpace
-from .custom_json import conv
+from practicon import CheckStateSpace, conv
 
 from control import TransferFunction
 import pytest
@@ -113,7 +112,7 @@ def test_statespace():
     testname, score, result, sa, modelanswer = check6(
         0, ref6, dict(sysx=conv(myfunc2(0)['sysx'])))
     assert score == 1.0
-    print(result, sa, modelanswer)
+    # print(result, sa, modelanswer)
 
     def myfunc3(variant: int):
         s = TransferFunction.s
@@ -125,14 +124,14 @@ def test_statespace():
         D = str(sysx.D.tolist())
         return locals()
 
-    check7 = CheckStateSpace('A,B,C,D', 0.01, 0.01, 1)
+    check7 = CheckStateSpace('sysx', 0.01, 0.01, 1, ('A', 'B', 'C', 'D'))
     ref7 = check7.encode(1, myfunc3)
     testname, score, result, sa, modelanswer = check7(
         0, ref7, dict(
             A=conv(myfunc3(0)['A']), B=conv(myfunc3(0)['B']),
             C=conv(myfunc3(0)['C']), D=conv(myfunc3(0)['D'])))
     assert score == 1.0
-    print(result, sa, modelanswer)
+    # print(result, sa, modelanswer)
 
 if __name__ == '__main__':
     test_statespace()

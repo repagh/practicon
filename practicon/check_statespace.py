@@ -13,7 +13,7 @@ from scipy import signal
 from control import StateSpace, minreal
 from base64 import b64encode, b64decode
 import zlib as cmpr
-from matrixparser import parseMatrix
+from .matrixparser import parseMatrix
 
 
 class ZPK:
@@ -112,17 +112,15 @@ class CheckStateSpace:
     """Generate check codes and check answers."""
 
     def __init__(self, var: str,
-                 d_abs: float = 0.0, d_rel: float = 0.0, threshold: int = 0):
+                 d_abs: float = 0.0, d_rel: float = 0.0, threshold: int = 0,
+                 elts=None):
         """
         Create a Matrix value check object.
 
         Parameters
         ----------
         var : str
-            Variable name to check. Can also be a comma-separated set 
-            of names for the individual state-space system matrices
-            A, B, C, D. These are then read from strings with Python or
-            Matlab compatibility.
+            Variable name to check.
         d_abs : float, optional
             Absolute error margin.
         d_rel : float, optional
@@ -132,6 +130,14 @@ class CheckStateSpace:
             partial score. E.g., 3 means one missing/erroneous element gives
             a score of 0.75, beyond 3 score will be zero. A transposed shape
             will also count as one erroneous element.
+        elts : iterable of str, optional
+            Alternative names for composing the var object from individual
+            string variables, i.e., names for the A, B, C, D matrices. This
+            uses parsing with Matlab or Python compatibility. Note that
+            the name "var" is still used for creating the reference data,
+            and that it will be a first candidate for the user's answer.
+            Let "var" start with "_", to force the user to enter individual
+            matrices.
 
         Returns
         -------
@@ -155,19 +161,19 @@ class CheckStateSpace:
 
         """
         # check four variables options
-        if ',' in var:
-            vnames = map(str.strip, var.split(','))
-            if len(list(vnames)) != 4:
-                raise ValueError("incomplete variables ABCD")
-            for i in vnames:
+        if elts is not None:
+            if len(list(elts)) != 4:
+                raise ValueError("incomplete variables A,B,C,D")
+            for i in elts:
                 if not i.isidentifier():
                     raise ValueError("Incorrect variable name '{}'".format(i))
-        elif not var.isidentifier():
-            raise ValueError("Incorrect variable name '{}'".format(i))
+        if not var.isidentifier():
+            raise ValueError("Incorrect variable name '{}'".format(var))
         self.var = var
         self.d_abs = d_abs
         self.d_rel = d_rel
         self.threshold = threshold
+        self.elts = elts
 
     def _return(self, fraction, report, value, ref):
         """Produce check return value."""
@@ -177,21 +183,34 @@ class CheckStateSpace:
                 str(value),
                 str(ref))
 
-    def _extractValue(self, _dict, forcheck=False):
-        if ',' in self.var:
-            value = {"dt": 0}
+    def _extractValue(self, _dict: dict):
+        if self.var[0] != '_' or self.elts is None:
+            try:
+                return _dict[self.var]
+            except KeyError:
+                if self.elts is None:
+                    raise RuntimeWarning(
+                        "variable {var} not found".format(var=self.var))
+
+        # second attempt, individual elements to be parsed
+        try:
+            value = {"dt": 0.0}
 
             # string-loaded variables
-            vnames = map(str.strip, self.var.split(','))
-            for m, v in zip("ABCD", vnames):
-                value[m] = parseMatrix(
-                    m, "{} = {}".format(m, _dict[v]))
-            if forcheck:
-                value = StateSpace(value["A"], value["B"],
-                                   value["C"], value["D"])
-        else:
-            value = _dict[self.var]
-        return value
+            for m, v in zip(("A", "B", "C", "D"), self.elts):
+                value[m] = parseMatrix(v, "{} = {}".format(v, _dict[v]))
+
+            return value
+        except KeyError:
+            if self.var[0] != '_':
+                raise RuntimeWarning(
+                    "variable '{}' nor individual matrices {} found"
+                    "".format(self.var, self.elts))
+            else:
+                raise RuntimeWarning(
+                    "not all matrices {} found".format(self.elts))
+        except ValueError as v:
+            raise RuntimeWarning(str(v))
 
     def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
@@ -232,13 +251,7 @@ class CheckStateSpace:
             return np.allclose(xr, x, self.d_rel, self.d_abs)
 
         fails = 0
-        try:
-            value = self._extractValue(_globals)
-        except KeyError:
-            raise RuntimeWarning(
-                "Variable {var} not found".format(var=self.var))
-        except ValueError as v:
-            raise RuntimeWarning(str(v))
+        value = self._extractValue(_globals)
 
         try:
             A = np.array(value["A"])
@@ -324,7 +337,7 @@ class CheckStateSpace:
         ref = []
         for _v in range(nvariants):
             res = func(_v)
-            value = self._extractValue(res, True)
+            value = res[self.var]
 
             """
             # balance the ABCD system, for robustness, to real shur form

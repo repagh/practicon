@@ -11,7 +11,7 @@ from base64 import b64encode, b64decode
 import json
 import numpy as np
 import zlib as cmpr
-from matrixparser import parseMatrix
+from .matrixparser import parseMatrix
 
 
 class CheckTransferFunction:
@@ -36,7 +36,8 @@ class CheckTransferFunction:
         return z, p, k
 
     def __init__(self, var: str,
-                 d_abs: float = 0.0, d_rel: float = 0.0):
+                 d_abs: float = 0.0, d_rel: float = 0.0,
+                 elts=None):
         """
         Create a transfer function check object.
 
@@ -46,25 +47,33 @@ class CheckTransferFunction:
             Variable name to check. Can also be a comma-separated set
             of names for the numerator and denominator arrays. These are
             then read from strings with Python or Matlab compatibility.
-        d_abs : float
+        d_abs : float, optional
             Absolute error margin.
         d_rel : float, optional
             Relative error margin.
+        elts : iterable of str, optional
+            Alternative names for composing the var object from individual
+            variables, i.e., the num, den, arrays. This
+            uses parsing with Matlab or Python compatibility. Note that
+            the name "var" is still used for creating the reference data,
+            and that it will be a first candidate for the user's answer.
+            Let "var" start with "_", to force the user to enter individual
+            matrices.
 
         Returns
         -------
         None.
 
         """
-        if ',' in var:
-            vnames = map(str.strip, var.split(','))
-            if len(list(vnames)) != 2:
+        if elts is not None:
+            if len(list(elts)) != 2:
                 raise ValueError("incomplete variables num, den")
-            for i in vnames:
+            for i in elts:
                 if not i.isidentifier():
                     raise ValueError("Incorrect variable name '{}'".format(i))
-        elif not var.isidentifier():
-            raise ValueError("Incorrect variable name '{}'".format(i))
+        if not var.isidentifier():
+            raise ValueError("Incorrect variable name '{}'".format(var))
+        self.elts = elts
         self.var = var
         self.d_abs = d_abs
         self.d_rel = d_rel
@@ -78,20 +87,35 @@ class CheckTransferFunction:
                 str(TransferFunction(
                     ref['num'], ref['den'], ref['dt'])))
 
-    def _extractValue(self, _dict, forcheck=False):
-        if ',' in self.var:
+    def _extractValue(self, _dict: dict):
+        if self.var[0] != '_' or self.elts is None:
+            try:
+                tf = _dict[self.var]
+                return TransferFunction(tf['num'][0][0], tf['den'][0][0])
+            except KeyError:
+                if self.elts is None:
+                    raise RuntimeWarning(
+                        "variable {var} not found".format(var=self.var))
+
+        # second attempt, individual elements to be parsed
+        try:
             value = {"dt": 0.0}
 
             # string-loaded variables
-            vnames = map(str.strip, self.var.split(','))
-            for m, v in zip(("num", "den"), vnames):
-                value[m] = parseMatrix(
-                    v, "{} = {}".format(v, _dict[v]))
-            if forcheck:
-                value = TransferFunction(value["num"][0], value["den"][0])
-        else:
-            value = _dict[self.var]
-        return value
+            for m, v in zip(("num", "den"), self.elts):
+                value[m] = parseMatrix(v, "{} = {}".format(v, _dict[v]))[0]
+
+            return TransferFunction(value['num'], value['den'])
+        except KeyError:
+            if self.var[0] != '_':
+                raise RuntimeWarning(
+                    "variable '{}' nor individual matrices {} found"
+                    "".format(self.var, self.elts))
+            else:
+                raise RuntimeWarning(
+                    "not all matrices {} found".format(self.elts))
+        except ValueError as v:
+            raise RuntimeWarning(str(v))
 
     def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
@@ -129,16 +153,16 @@ class CheckTransferFunction:
 
         # get the tf. If this throws, show mercy and let student provide
         # the variable
+
         try:
             tf = self._extractValue(_globals)
-        except KeyError:
-            raise RuntimeWarning(
-                "Transfer function {} not found".format(self.var))
-        try:
-            tf = TransferFunction(tf['num'], tf['den'], tf['dt'])
-        except Exception:
+        except RuntimeWarning as e:
+            raise e
+        except Exception as e:
             return self._return(
-                0.0, "not a transfer function object", tf, ref)
+                0.0,
+                "cannot analyse as transfer function: {}".format(e),
+                "??", ref)
 
         result = []
         score = 1.0
@@ -235,7 +259,7 @@ class CheckTransferFunction:
         ref = []
         for v in range(nvariants):
             res = fn(v)
-            tf = self._extractValue(res, True)
+            tf = res[self.var]
             num, den, dt = tf.num[0][0], tf.den[0][0], tf.dt
             num, den = self._cleanup(num), self._cleanup(den)
             ref.append(dict(num=num.tolist(), den=den.tolist(), dt=dt))

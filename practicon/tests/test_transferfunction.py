@@ -1,24 +1,17 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Fri May  8 18:36:32 2020 .
+Test the CheckTransferFunction class.
 
-Test the CheckNumeric class.
+To run test from within Spyder and with source dir, 
+set run dir to practicon3, and dedicated console
+
+Created on Fri May  8 18:36:32 2020
 
 @author: repa
 """
 
-from practicon import CheckTransferFunction
-from .custom_json import conv
-
+from practicon import CheckTransferFunction, conv
 from control import TransferFunction
 import pytest
-
-"""
-Returns
--------
-None
-"""
 
 
 def test_transferfunction():
@@ -84,6 +77,14 @@ def test_transferfunction():
     assert result != "answered correctly"
     # assert modelanswer == f"Reference {10} (± 0.1)"
 
+    tf = TransferFunction([1, 2], [1, 1, 0])
+    num, den = conv(tf.num[0][0]), conv(tf.den[0][0])
+
+    check4 = CheckTransferFunction('notfound', 0.1, 0.0, ('num', 'den'))
+    ref4 = check4.encode(1, lambda v: {'notfound': tf})
+    testname, score, result, sa, modelanswer = check4(0, ref4, locals())
+    assert score == 1.0
+    print(result)
 
 if __name__ == '__main__':
     test_transferfunction()

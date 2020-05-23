@@ -11,22 +11,22 @@ from base64 import b64encode, b64decode
 from math import log10
 import numpy as np
 import zlib as cmpr
-from matrixparser import parseMatrix
+from .matrixparser import parseMatrix
 
 
 class CheckMatrix:
     """Generate check codes and check answers."""
 
     def __init__(self, var: str,
-                 d_abs: float = 0.0, d_rel: float = 0.0, threshold: int = 0):
-        """
-        Create a Matrix value check object.
+                 d_abs: float = 0.0, d_rel: float = 0.0, threshold: int = 0,
+                 elts=None):
+        """Create a Matrix value check object.
 
         Parameters
         ----------
         var : str
-            Variable name to check. If this contains (start/ends with a) a 
-            comma (','), the matrix is parsed from a string with Python or 
+            Variable name to check. If this contains (start/ends with a) a
+            comma (','), the matrix is parsed from a string with Python or
             Matlab syntax.
         d_abs : float, optional
             Absolute error margin.
@@ -37,6 +37,13 @@ class CheckMatrix:
             partial score. E.g., 3 means one missing/erroneous element gives
             a score of 0.75, beyond 3 score will be zero. A transposed shape
             will also count as one erroneous element.
+        elts : str, optional
+            Alternative name for composing the var object a string variables,
+            This uses parsing with Matlab or Python compatibility. Note that
+            the name "var" is still used for creating the reference data,
+            and that it will be a first candidate for the user's answer.
+            Let "var" start with "_", to force the user to enter individual
+            matrices.
 
         Returns
         -------
@@ -45,34 +52,18 @@ class CheckMatrix:
         Create a check object
         >>> check = CheckMatrix('var', 0.01)
 
-        A function to calculate the answer values, for different variants
-        >>> def myfun(variant):
-        ...    return { 'var' : 5 + variant }
-
-        Create the encoded answers for all variants
-        >>> ref = check.encode(3, myfun)
-
-        Check against a trial value for a specific variant
-        >>> var = 5.01
-        >>> testname, score, result, modelanswer = check(0, ref, locals())
-        >>> print(score)
-        1.1
-
         """
-        if ',' in var:
-            vnames = [n.strip() for n in var.split(',') if n.strip()]
-            if len(list(vnames)) != 1:
-                raise ValueError("incomplete variables matrix")
-            for i in vnames:
-                if not i.isidentifier():
-                    raise ValueError("Incorrect variable name '{}'".format(i))
-        elif not var.isidentifier():
-            raise ValueError("Incorrect variable name '{}'".format(i))
+        if elts is not None:
+            if not elts.isidentifier():
+                raise ValueError("Incorrect variable name '{}'".format(elts))
+        if not var.isidentifier():
+            raise ValueError("Incorrect variable name '{}'".format(var))
 
         self.var = var
         self.d_abs = d_abs
         self.d_rel = d_rel
         self.threshold = threshold
+        self.elts = elts
 
     def _return(self, fraction, report, value, ref, tol):
         """Produce return value."""
@@ -80,18 +71,43 @@ class CheckMatrix:
                 fraction, report, str(value),
                 "{ref}\n(± {tol})".format(ref=ref, tol=tol))
 
-    def _extractValue(self, _dict, forcheck=False):
-        if ',' in self.var:
+    def _extractValue(self, _dict: dict):
+        """
+        Obtain answer from student answer dictionary.
 
-            # string-loaded variables
-            v = [n.strip() for n in self.var.split(',') if n.strip()][0]
-            value = parseMatrix(
-                v, "{} = {}".format(v, _dict[v]))
-            if forcheck:
-                value = np.array(value)
-        else:
-            value = _dict[self.var]
-        return value
+        Parameters
+        ----------
+        _dict : dict
+            Should contain the student answer.
+
+        Returns
+        -------
+        list of list of float
+            Matrix answer by student.
+
+        """
+        if self.var[0] != '_' or self.elts is None:
+            try:
+                return _dict[self.var]
+            except KeyError:
+                if self.elts is None:
+                    raise RuntimeWarning(
+                        "variable {var} not found".format(var=self.var))
+
+        # second attempt, individual elements to be parsed
+        try:
+            return parseMatrix(self.elts, "{} = {}".format(
+                self.elts, _dict[self.elts]))
+        except KeyError:
+            if self.var[0] != '_':
+                raise RuntimeWarning(
+                    "variable '{}' nor string matrix {} found"
+                    "".format(self.var, self.elts))
+            else:
+                raise RuntimeWarning(
+                    "matrix {} not found".format(self.elts))
+        except ValueError as v:
+            raise RuntimeWarning(str(v))
 
     def __call__(self, variant: int, codeddata: str, _globals: dict):
         """
@@ -138,15 +154,7 @@ class CheckMatrix:
 
         result = []
         fails = 0
-        try:
-            value = np.array(self._extractValue(_globals))
-        except KeyError:
-            raise RuntimeWarning(
-                "Variable {var} not found".format(var=self.var))
-        except Exception:
-            return self._return(
-                0.0, "cannot interpret as matrix",
-                _globals[self.var], ref, tol)
+        value = np.array(self._extractValue(_globals))
 
         if ref.shape != value.shape:
             # accept 1d answers vs column or row ref, or the reverse
@@ -207,7 +215,7 @@ class CheckMatrix:
         ref = []
         for _v in range(nvariants):
             res = func(_v)
-            value = self._extractValue(res, True)
+            value = res[self.var]
 
             # round off to two more digits than the precision of the
             # tolerance matrix elements

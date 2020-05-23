@@ -10,8 +10,7 @@ Test the CheckMatrix class.
 
 # to run as script, set the execution folder to practicon
 
-from practicon import CheckMatrix
-from .custom_json import conv
+from practicon import CheckMatrix, conv
 
 import pytest
 import numpy as np
@@ -32,6 +31,8 @@ def test_matrix():
                 'b2': np.ones((3, 1)) + variant,
                 'asp' :
             repr((np.eye(2) + np.array(((0, 1), (0, 0))) * variant).tolist()),
+                '_asp' :
+                    np.eye(2) + np.array(((0, 1), (0, 0))) * variant,
                 'asm' : """[1 2; 3 4]"""}
 
     # generate encoding
@@ -101,9 +102,9 @@ def test_matrix():
     assert result == "incorrect matrix shape"
 
 
-    check5 = CheckMatrix('asp,', 0.01, 0.01)
+    check5 = CheckMatrix('a', 0.01, 0.01, 0, 'asm')
     ref5 = check5.encode(3, myfunc)
-    check6 = CheckMatrix('asm,', 0.01, 0.01)
+    check6 = CheckMatrix('_asp', 0.01, 0.01, 0, 'asm')
     ref6 = check6.encode(3, myfunc)
     testname, score, result, sa, modelanswer = check5(1, ref5, myfunc(1))
     testname, score, result, sa, modelanswer = check6(1, ref6, myfunc(1))
