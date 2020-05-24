@@ -177,8 +177,8 @@ hide_result = is_precheck or (not display_feedback)
 if complete:
     __result = {
         'testresults':
-        [ ['iscorrect', 'testcode', 'got', 'awarded', 
-           'studentanswer', 'expected'] ]
+        [ ['iscorrect', 'testlabel', 'studentanswer', 'got', 'awarded', 
+           'expected'] ]
     }
 else:
     __result = {
@@ -197,18 +197,15 @@ if complete:
         sum_points += {{ TEST.mark }}
         testname, score, result, studentanswer, modelanswer = check(
             variant, ref, __student_dict__)
-        if hide_result:
-            okmark = None
-        else:
-            okmark = score == 1.0
+        okmark = score == 1.0
 
         __result['testresults'].append(
-            [ okmark, 
-              testname, 
-              (hide_result and "variable exists") or result, 
-              (hide_result and "hidden") or score,
+            [ okmark,            
+              testname,
               studentanswer,
-              (hide_result and "--") or modelanswer])
+              result,
+              score,
+              modelanswer])
               
         sum_score += {{ TEST.mark }} * score
 
@@ -216,9 +213,10 @@ if complete:
         __result['testresults'].append(
             [ False,
               "Check '{}'".format(check.var),
+              None,
               "missing variable",
-              (hide_result and "hidden") or 0.0,
-              "", '--'
+              0.0,
+              '--'
             ])
 
 else:
@@ -235,51 +233,45 @@ if not complete:
     sys.exit(0)
 
 fraction = sum_score/sum_points
-if __result.get('abort', False):
-    __result['fraction'] = (hide_result and 0.00002) or 0.0
-elif sum_points:
-    __result['fraction'] = (
-        hide_result and max(0.00002, min(fraction, 0.99998))) or fraction
+if sum_points:
+    __result['fraction'] = fraction
 else:
-    __result['fraction'] = (hide_result and 0.99998) or 1.0
+    __result['fraction'] = 0.0
 
 def tablerow(row, rowdata, lastrow=''):
     res = [ '<tr class="r{} {}">'.format(row % 2, lastrow) ]
+    
+    # status; variable missing or found
     res.append('<td class="cell c0" style><i class="icon fa ')
-    if rowdata[0] is None:
+    if rowdata[2] is None:
+        res.append('fa-remove text-danger fa-fw" title="Missing"'
+            ' aria-label="Missing">')
+    else:
         res.append('fa-hand-o-right text-success fa-fw" title="Found"'
             ' aria-label="Found">')
-    elif rowdata[0]:
-        res.append('fa-check text-success fa-fw" title="Correct"'
-            ' aria-label="Correct">')
-    else:
-        res.append('fa-remove text-danger fa-fw" title="Incorrect"'
-            ' aria-label="Incorrect">')
     res.append('</i></td>')
-    for c, it in enumerate(rowdata[1:-1]):
-        res.append(
-            '<td class="cell c{}"><pre class="tablecell">{}</pre></td>'
-            ''.format(c+1, it))
+    
+    # test name
+    res.append(
+        '<td class="cell c{}"><pre class="tablecell">{}</pre></td>'
+        ''.format(1, rowdata[1]))
+    # student answer (interpreted/printed)
     res.append(
         '<td class="cell c{} lastcol"><pre class="tablecell">{}</pre></td>'
-        ''.format(len(rowdata)-1, rowdata[-1]))
+        ''.format(2, rowdata[2]))
     res.append('</tr>')
     return ''.join(res)
     
 html = [ """<div class="coderunner-test-results">
 <table class="coderunner-test-results"><thead>
-<tr><th class="header c0"></th><th class="header c1">Test</th>
-<th class="header c2">Result</th><th class="header c3">Awarded</th>
-<th class="header c4">Your answer</th>
-<th class="header c5">Expected</th></tr></thead><tbody>""" ]
+<tr><th class="header c0"></th><th class="header c1">Test name</th>
+<th class="header c2 lastcol">Your answer</th></tr></thead><tbody>""" ]
 for i in range(1,len(__result['testresults'])):
     html.append(tablerow(i, __result['testresults'][i], 
         (i+1 == len(__result['testresults']) and " lastrow") or ""))
 html.append('</tbody></table></div>')
 
-
-__result['epiloguehtml'] = ''.join(html)
-__result['showoutputonly'] = True
+__result['attemptconfirmhtml'] = ''.join(html)
 
 # del __result['testresults']
 
