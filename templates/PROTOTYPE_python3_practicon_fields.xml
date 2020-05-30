@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+<!-- question: 27  -->
+  <question type="coderunner">
+    <name>
+      <text>PROTOTYPE_python3_practicon_fields</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[<h3>PRACTICON</h3>
+<h4>Introduction</h4>
+<p>This question type provides programmatic comparison/checking of numeric answers, geared to control theory quizzes and exams. It uses the CodeRunner question type for Moodle, with some adjustments. The following answers can be checked:</p>
+<p></p>
+<ul>
+    <li>Numeric answers, checked with an absolute and relative (with respect to the answer value) margin. Note that the numeric answer type can also be used to score multiple choice. <br></li>
+    <li>Transfer functions, checked for pole and zero locations, and gain. Cancelling pole/zero pairs are marked as errors.&nbsp;</li>
+    <li>Matrices, all elements are checked with an absolute and relative margin.&nbsp;</li>
+    <li>State-space systems, verified to be correct regardless of choice for state variables. Additional states above minimal realization are marked as errors.&nbsp;</li>
+    <li>True-false values.</li>
+</ul>
+<h4>Defining a question</h4>
+<p>Write a function "ref_answer" that calculates the answers for a given question variant. You may use the variant (an integer, randomly chosen per student) to create variations in the question parameters. Note that you must carefully coordinate these variations
+    in the question text too, see "Template params" later. The ref_answer function returns a dictionary with the "answers" for a given variant. Here is an example:</p>
+<pre>from control import TransferFunction
+def ref_answer(variant):
+    tau = parameters["tau"][variant]
+    s = TransferFunction.s
+    answer_tf = 1/(tau*s + 1)
+    return dict(answer_tf=answer_tf)
+</pre>
+<p>The question variable is in this case "answer_tf".</p>
+<p>Keep the following two options for the question type: "precheck" - all, "all-or-nothing grading" unselected. Since the ref_answer function is slightly different from what students are supposed to write, remove the presentation of the reference answer
+    from the student feedback, see the options below the preview. You may include a relevant "student-type" answer in the specific feedback.<br></p>
+<h4>Check cases</h4>
+<p>Checking is performed by the template for the question, in combination with a number of routines in a practicon python module. Each variable / answer given by the student is checked by the code in a single "test case", which needs to create a check variable.</p>
+<p></p>
+<ul>
+    <li>
+        <pre>CheckNumeric(var: str, d_abs: float, d_rel: float)</pre>checks a numeric answer, with absolute tolerance d_abs, and relative tolerance d_rel. var is the name of the variable in the student answer.&nbsp;</li>
+    <li>
+        <pre>CheckTransferFunction(var: str, d_abs: float, d_rel: float, elements)</pre>checks a transfer function. Single transfer function only, i.e., one input, one output. Tolerances are applied to gain and pole/zero locations. The last item, 'elements', is an iterable with indicates the names of the separate numerator and denominator
+        strings.<br></li>
+    <li>
+        <pre>CheckMatrix(var: str, d_abs: float, d_rel: float, threshold, elements)</pre>checks a matrix. Parameter 'threshold' determines after how many errors the score is zero. The optional 'elements' parameter defines the name of the string that will be interpreted as Matlab or Python matrix. <br></li>
+    <li>
+        <pre>CheckStateSpace(var: str, d_abs: float, d_rel: float, threshold, elements)</pre>checks a state-space system, multi-input, multi-output. The 'threshold' parameter determines after how many errors the score is zero. E.g. threshold 1 will give 50% score after one error, such as a D matrix gain error. The variable 'elements',
+        an iterable, indicates names of separate A, B, C, D matrices as answer.<br></li>
+    <li>
+        <pre>CheckTrueFalse(var: str)</pre>check a true/false variable</li>
+</ul>
+<p>To create the data for the checks, empty <span>the</span>&nbsp;"Expected output" fields, and start the preview. Enter some code in the answer field, and run the pre-check. The "Result" columns now contain the check values as encoded strings, these must
+    be pasted (fully!) in the&nbsp;"Expected output" fields. After this step, the question is ready for use.</p>
+<h4>Variable fields</h4>
+<p>The question type python3_practicon lets students enter the answers as a python program that results in the right variables. This question type, python3_practicon_fields, lets the students paste the answers into answer fields, either variables, or matrices.
+    The matrix answers are parsed for both Python (multi-dimensional list) or Matlab syntax. To create the variable fields, the extra template data fields are used. For each question, give a JSON struct variable with the following:</p>
+<ul>
+    <li>name. This must match the variable name for TrueFalse or Numeric, or one of the names in the elements variable for the matrix, statespace or transfer function checks.</li>
+    <li>label, optional, if not given uses the name.</li>
+    <li>type, optional, if not given uses a single-line text input. Available options are "text", "textarea" and "checkbox".</li>
+    <li>text, optional. This is only used for checkbox and radio inputs, and printed after the control. For radio input, the text variable must be an array with all possible choices. <br></li>
+</ul>
+<p>When an answer requires multiple fields, enter a list of structs. Example:</p>
+<pre> { "name": "num", "label": "Numerator", "type": "textarea" }<br></pre>
+<h4>Template params field</h4>
+<p>The template params are used to further configure the question. With a special field, the random seed for the question can be set.&nbsp;</p>
+<pre>{{- set_random_seed(STUDENT.id) -}}</pre>
+<p></p>
+<p>For variation of the question parameters, the question type needs to know the number of variants and a chosen variant.&nbsp;</p>
+<pre>{ "nvariants": 3, "variant" : {{ random(2) }} }</pre>
+<p>This example uses three variants. The random function will give a number between 0 and 2 inclusive, therefore matching the three variants. Make sure this matches, if nvariants is too small, a portion of your students will receive an error. <br></p>
+<p>Students always get information on whether they supplied the correct answer variables. Question feedback settings determine whether they also receive the model answer and evaluation.<br></p>
+<p>Pre-check should always be enabled. With a pre-check, feedback is given on whether students supply the right variables with their answers. The type of variable is not indicated at this phase, if a student answers a transfer function when a state-space
+    system is requested, there are no points.&nbsp;</p>
+<p>If you want to change a variable in your question according to the variant, it is best to put these in the question parameters too, like:</p>
+<p></p>
+<pre>{ "nvariants": 3, "variant" : {{ random(2) }}, 
+  "tau": [1.0, 1.1, 1.15]}</pre>These variable lists are available to your "ref_answer" function in the (global) dictionary variable parameters, so for this example:
+<p></p>
+<p></p>
+<pre>tau = parameters["tau"][variant]</pre>
+<p>will be the tau variable corresponding to a specific variant. This value may be entered in the text of your question as:</p>
+<pre>{{ QUESTION.parameters.tau[QUESTION.parameters.variant] }}</pre>
+<p>or simply as<br></p>
+<pre>{{ tau[variant] }}</pre>
+<p>if you selected parameter hoisting.</p>
+<h4>Equations</h4>
+<p>If you have equations in the fill-in fields (e.g, text for a radio button), you need at least one equation in the question text to get MathJax loaded: \[ f(x) = \sin(x) \]</p><br>
+<p></p>
+<p></p>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>python3_practicon_fields</coderunnertype>
+    <prototypetype>2</prototypetype>
+    <allornothing>0</allornothing>
+    <penaltyregime>10, 20, ...</penaltyregime>
+    <precheck>4</precheck>
+    <showsource>0</showsource>
+    <answerboxlines>18</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[{ "a": 5.1, "num": "[1]", "den": "[1, 2, 1]", 
+  "A": "[1, -2; 0, 1]", "B": "[1;0]", "C": "[1, 0]", "D": "[0]",
+  "eye": "[1 0; 0 1]", "gamble": 1 }]]></answerpreload>
+    <globalextra><![CDATA[ Value a {[ 20 ]} 
+<tr><td> Numerator </td><td> {[ 50 ]} </td></tr>
+<tr><td> Denominator </td><td> {[ 50 ]} </td></tr>
+<tr><td> A matrix </td><td> {[ 6,50 ]} </td></tr>
+<tr><td> B matrix </td><td> {[ 6,50 ]} </td></tr>
+<tr><td> C matrix </td><td> {[ 6,50 ]} </td></tr>
+<tr><td> D matrix </td><td> {[ 6,50 ]} </td></tr>
+<tr><td> I matrix </td><td> {[ 6,50 ]} </td></tr>
+<tr><td> gamble </td><td> {[ 20 ]} </td></tr>
+]]></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[__student_json__ = """
+{{ STUDENT_ANSWER | e('py') }}
+"""
+
+'''
+student id:       {{ STUDENT.id }}
+student username: {{ STUDENT.username }}
+'''
+
+from io import StringIO
+import json
+import sys
+import subprocess
+from practicon import CheckNumeric, CheckTransferFunction, \
+    CheckMatrix, CheckStateSpace, CheckTrueFalse
+from control import TransferFunction, StateSpace
+
+# figure out if we need to generate reference or run student code and test
+complete = True
+{% for TEST in TESTCASES %}
+ref = {{ TEST.expected|length }}
+complete = complete and ref > 1
+{% endfor %}
+
+# if complete, decode the student's answer
+if complete:
+    # load the answers
+    __student_dict__ = json.loads(__student_json__)
+
+# function with the question reference code, parameters contain customization
+parameters = json.loads("""{{ QUESTION.parameters|json_encode|raw }}""")
+{{ QUESTION.answer }}
+
+# variant, if defined, selects a specific question configuration
+variant = "{{ QUESTION.parameters.variant }}"
+variant = (variant and int(variant)) or 0
+nvariants = "{{ QUESTION.parameters.nvariants }}"
+nvariants = (nvariants and int(nvariants)) or 1
+
+sum_score, sum_points = 0.0, 0.0
+is_precheck = {{ IS_PRECHECK }}
+
+# room for the result object
+if complete:
+    __result = {
+        'testresults':
+        [ ['iscorrect', 'testlabel', 'studentanswer', 'got', 'awarded', 
+           'expected'] ]
+    }
+else:
+    __result = {
+        'fraction': 1.0,
+        'testresults':
+        [[ 'got' ]]
+    }
+  
+class Pipe(object):
+    """Temporarily deviate standard output and error"""
+    def __init__(self, pinput=''):
+        global sys
+        self.stdout = sys.stdout
+        sys.stdout = StringIO()
+        self.stderr = sys.stderr
+        sys.stderr = StringIO()
+
+    def result(self):
+        global sys
+        res1 = sys.stdout.getvalue().rstrip()
+        res2 = sys.stderr.getvalue().rstrip()
+        sys.stdout = self.stdout
+        sys.stderr = self.stderr
+        return res1, res2
+  
+  
+{% for TEST in TESTCASES %}
+ref = """{{ TEST.expected }}"""
+check = {{ TEST.testcode }}
+
+# if refs not empty, we are in question asking mode. Check each answer
+if complete:
+    p = Pipe()
+    try:
+        sum_points += {{ TEST.mark }}
+        testname, score, result, studentanswer, modelanswer = check(
+            variant, ref, __student_dict__)
+        okmark = score == 1.0
+
+        __result['testresults'].append(
+            [ okmark,            
+              testname,
+              studentanswer,
+              result,
+              score,
+              modelanswer])
+              
+        sum_score += {{ TEST.mark }} * score
+
+    except RuntimeWarning as e:
+        __result['testresults'].append(
+            [ False,
+              "Check '{}'".format(check.var),
+              None,
+              "missing variable",
+              0.0,
+              '--'
+            ])
+    stdout, stderr = p.result()
+else:
+        
+    # generate coded answer strings
+    _ref = check.encode(nvariants, ref_answer)
+    __result['testresults'].append([_ref])
+    
+{% endfor %}
+
+# if only generating reference data, quickly return
+if not complete:
+    print(json.dumps(__result))
+    sys.exit(0)
+
+fraction = sum_score/sum_points
+if sum_points:
+    __result['fraction'] = fraction
+else:
+    __result['fraction'] = 0.0
+
+def tablerow(row, rowdata, lastrow=''):
+    res = [ '<tr class="r{} {}">'.format(row % 2, lastrow) ]
+    
+    # status; variable missing or found
+    res.append('<td class="cell c0" style><i class="icon fa ')
+    if rowdata[2] is None:
+        res.append('fa-remove text-danger fa-fw" title="Missing"'
+            ' aria-label="Missing">')
+    else:
+        res.append('fa-hand-o-right text-success fa-fw" title="Found"'
+            ' aria-label="Found">')
+    res.append('</i></td>')
+    
+    # test name
+    res.append(
+        '<td class="cell c{}"><pre class="tablecell">{}</pre></td>'
+        ''.format(1, rowdata[1]))
+    # student answer (interpreted/printed)
+    res.append(
+        '<td class="cell c{} lastcol"><pre class="tablecell">{}</pre></td>'
+        ''.format(2, rowdata[2]))
+    res.append('</tr>')
+    return ''.join(res)
+    
+html = [ """<div class="coderunner-test-results">
+<table class="coderunner-test-results"><thead>
+<tr><th class="header c0"></th><th class="header c1">Test name</th>
+<th class="header c2 lastcol">Your answer</th></tr></thead><tbody>""" ]
+for i in range(1,len(__result['testresults'])):
+    html.append(tablerow(i, __result['testresults'][i], 
+        (i+1 == len(__result['testresults']) and " lastrow") or ""))
+html.append('</tbody></table>')
+if stdout:
+    html.append('<p>Program output when checking your answer:</p>')
+    html.append('<pre>{}</pre>'.format(stdout))
+if stderr:
+    html.append('<p>Error output when checking your answer:</p>')
+    html.append('<pre>{}</pre>'.format(stderr))
+html.append('</div>')
+
+if is_precheck:
+    __result['attemptconfirmhtml'] = ''.join(html)
+    del __result['testresults']
+    
+print(json.dumps(__result))
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>1</allowmultiplestdins>
+    <answer>from control import TransferFunction, tf2ss
+import numpy as np
+def ref_answer(variant):
+    a = 5 + variant*0.2
+    tau = parameters['tau'][variant]
+    s = TransferFunction.s
+    tf = (1+tau*s)/(s**3+3*s**2+2*s +17)
+    I = np.eye(3)*a
+    sys = tf2ss(tf)
+    gamble = variant % 2 == 0
+    choice = 1
+    return dict(a=a, tf=tf, I=I, sys=sys, gamble=gamble, choice=choice)</answer>
+    <validateonsave>0</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>python3</language>
+    <acelang>python3</acelang>
+    <sandbox></sandbox>
+    <grader>TemplateGrader</grader>
+    <cputimelimitsecs>5</cputimelimitsecs>
+    <memlimitmb>1024</memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams><![CDATA[{{- set_random_seed(STUDENT.id) -}}
+{ "nvariants": 3, "variant" : {{ random(2) }},
+  "tau": [0.4, 0.5, 0.7]} ]]></templateparams>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <twigall>1</twigall>
+    <uiplugin>practicon</uiplugin>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <testcases>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text>CheckNumeric('a', 0.1, 0.01)</text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>eJyLNtUz0FEw1TMCESaxABh6AxA=</text>
+      </expected>
+      <extra>
+                <text><![CDATA[{ "label": "Guess A", "name": "a"}]]></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text><![CDATA[CheckTransferFunction('tf', 0.01, 0.001, ("num","den"))]]></text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>eJyLrlbKK81VslKINtAz0VEw1DOI1VFQSikBihiAGKl5IDmgsI6CMYgwAhGG5kBltToKSHpNKdBrTpreWACqbyjl
+</text>
+      </expected>
+      <extra>
+                <text><![CDATA[[ { "name":"num" }, { "label" :"Denominator", "name": "den", "type": "textarea" } ] ]]></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text><![CDATA[CheckStateSpace('sys', 0.01, 0.01, 1, "ABCD")]]></text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>eJyLjo6O1jXWM9BRMNAz0lEw1DOP1VGI1jU0gAhBCJAQmG0IEwCJAFXBpWAUWBymzQREGsLFYiEs3NbpwklUC3WJttGUSjYSbaE5hoWxAPA5SS4=
+</text>
+      </expected>
+      <extra>
+                <text><![CDATA[[ {"label": "A", "type": "textarea", "name": "A" }, {"label": "B", "type": "textarea", "name": "B" }, {"label": "C", "type": "textarea", "name":"C" }, {"label": "D", "type": "textarea", "name": "D" } ]]]></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text><![CDATA[CheckMatrix('I', 0.0001, 0.0001, 0, "eye" )]]></text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>eJyLjo421TPQUTCAErE6CtFgtim6AEw0FiQC1GSEVZMRVk1GME0mWDWZYNVkEhsbCwAUjiBK
+</text>
+      </expected>
+      <extra>
+                <text><![CDATA[[ {"label": "mat", "type": "textarea", "name": "eye" } ]]]></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text>CheckTrueFalse('gamble')</text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>W3RydWUsIGZhbHNlLCB0cnVlXQ==
+</text>
+      </expected>
+      <extra>
+                <text><![CDATA[[ {"label": "choice", "type": "checkbox", "name": "gamble" } ]]]></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000" >
+      <testcode>
+                <text><![CDATA[CheckNumeric("choice", 0.01)]]></text>
+      </testcode>
+      <stdin>
+                <text></text>
+      </stdin>
+      <expected>
+                <text>eJyLNtRRAKFYAAl8AeQ=</text>
+      </expected>
+      <extra>
+                <text><![CDATA[{ "label": "wisely", "type": "radio", "name": "choice", "text": [ "Incorrect", "Just right", "Unwise \\( \\alpha \\)"] }]]></text>
+      </extra>
+      <display>
+                <text>SHOW</text>
+      </display>
+    </testcase>
+    </testcases>
+  </question>
+
+</quiz>

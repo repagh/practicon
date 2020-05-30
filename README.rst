@@ -11,14 +11,13 @@ Features
 - Check modes for numeric answers.
 - Check mode for transfer functions.
 - Check mode for state-space systems, considers alternative choices for
-  state variables. (TODO)
-- Check mode for matrices. (TODO)
-- Check mode for true/false questions. (TODO)
-- Check mode for multiple option (radiobutton) choices. (TODO)
+  state variables.
+- Check mode for matrices.
+- Check mode for true/false questions.
 - Template for numeric/programmatic input, student leaves the answers in
-  appropriate Python variables. (WIP)
+  appropriate Python variables.
 - Template for field-based input, student enters the answer in browser
-  fields. (TODO)
+  fields.
 
 Links
 =====
@@ -45,5 +44,5 @@ added to the question database in use by your Moodle server or Moodle
 course.
 
 For field-base input, an additional javascript file needs to be
-installed in CodeRunner's folder. 
+installed in CodeRunner's folder.
 
