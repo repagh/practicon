@@ -26,7 +26,7 @@ setup(
     packages=find_packages(),
     classifiers=[f for f in CLASSIFIERS.split('\n') if f],
     install_requires=('numpy', 'scipy', 'control', 'slycot', 'json5',
-                      'zlib', 'pyparsing'),
+                      'pyparsing'),
     tests_require=('pytest'),
     test_suite='pytest'
 )

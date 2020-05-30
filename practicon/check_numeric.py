@@ -95,6 +95,7 @@ class CheckNumeric:
                 "Variable {var} not found".format(var=self.var))
 
         try:
+            value = float(value)
             good = abs(ref - value) < tol
         except Exception:
             return ("Value '{var}'".format(var=self.var),
