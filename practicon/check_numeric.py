@@ -131,7 +131,7 @@ class CheckNumeric:
         ref = []
         for _v in range(nvariants):
             res = func(_v)
-            value = res[self.var]
+            value = float(res[self.var])
             tol = max(self.d_abs, abs(self.d_rel*value))
             value = round(value, 2-int(log10(tol)))
             ref.append(value)
